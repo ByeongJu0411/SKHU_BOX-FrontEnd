@@ -1,0 +1,566 @@
+/* ===== HERO SECTION ===== */
+.hero {
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+}
+
+/* ===== 배경 ===== */
+.heroBg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: linear-gradient(135deg, #1a6b3c 0%, #2e8b57 25%, #3da06a 45%, #5cb882 65%, #8ed4a8 85%, #c8f0d4 100%);
+}
+
+.heroBg::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 80% 60% at 20% 80%, rgba(30, 100, 60, 0.6) 0%, transparent 70%),
+    radial-gradient(ellipse 60% 50% at 75% 20%, rgba(100, 200, 140, 0.4) 0%, transparent 60%),
+    radial-gradient(ellipse 40% 40% at 50% 50%, rgba(200, 240, 210, 0.2) 0%, transparent 50%);
+}
+
+.heroBg::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 90% 70% at 80% 90%, rgba(46, 139, 87, 0.5) 0%, transparent 60%);
+}
+
+/* ===== 대각선 스트라이프 ===== */
+.accentStripe {
+  position: absolute;
+  z-index: 1;
+  width: 120%;
+  height: 220px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02));
+  transform: rotate(-8deg);
+  top: 60px;
+  left: -10%;
+}
+
+.accentStripe2 {
+  position: absolute;
+  z-index: 1;
+  width: 120%;
+  height: 160px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.01));
+  transform: rotate(-5deg);
+  top: 200px;
+  left: -10%;
+}
+
+/* ===== 물결 도형 ===== */
+.wave {
+  position: absolute;
+  z-index: 1;
+  border-radius: 50%;
+  opacity: 0.12;
+  animation: floatWave 8s ease-in-out infinite;
+}
+
+.wave1 {
+  width: 600px;
+  height: 600px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.3), rgba(200, 240, 210, 0.1));
+  top: -200px;
+  right: -100px;
+}
+
+.wave2 {
+  width: 400px;
+  height: 400px;
+  background: linear-gradient(225deg, rgba(255, 255, 255, 0.25), rgba(100, 200, 140, 0.1));
+  bottom: -100px;
+  left: -80px;
+  animation-delay: -3s;
+}
+
+.wave3 {
+  width: 300px;
+  height: 300px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.2), transparent);
+  top: 20%;
+  left: 40%;
+  animation-delay: -5s;
+}
+
+/* ===== 떠다니는 오브젝트 ===== */
+.floatObj {
+  position: absolute;
+  z-index: 2;
+  border-radius: 50%;
+  animation: floatObj 6s ease-in-out infinite;
+}
+
+.objRing {
+  width: 60px;
+  height: 60px;
+  border: 8px solid rgba(255, 255, 255, 0.35);
+  background: transparent;
+  top: 12%;
+  left: 42%;
+  animation-delay: -1s;
+  transform: rotate(20deg);
+}
+
+.objDot1 {
+  width: 18px;
+  height: 18px;
+  background: rgba(255, 220, 100, 0.7);
+  top: 8%;
+  right: 12%;
+  animation-delay: -2s;
+  box-shadow: 0 4px 20px rgba(255, 220, 100, 0.3);
+}
+
+.objDot2 {
+  width: 12px;
+  height: 12px;
+  background: rgba(255, 255, 255, 0.5);
+  bottom: 25%;
+  left: 8%;
+  animation-delay: -4s;
+}
+
+.objDot3 {
+  width: 24px;
+  height: 24px;
+  background: rgba(100, 220, 160, 0.4);
+  top: 35%;
+  right: 8%;
+  animation-delay: -3s;
+  border-radius: 6px;
+  transform: rotate(45deg);
+}
+
+.objPill {
+  width: 50px;
+  height: 20px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 10px;
+  bottom: 18%;
+  left: 15%;
+  animation-delay: -5s;
+  transform: rotate(-20deg);
+}
+
+/* ===== 콘텐츠 ===== */
+.content {
+  position: relative;
+  z-index: 10;
+  max-width: 1200px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 0 60px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 60px;
+}
+
+/* ===== 텍스트 ===== */
+.text {
+  flex: 1;
+  max-width: 520px;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 20px;
+  padding: 6px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.95);
+  margin-bottom: 28px;
+  opacity: 0;
+  animation: fadeSlideUp 0.8s ease forwards 0.2s;
+}
+
+.badge::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  background: #a0f0b0;
+  border-radius: 50%;
+  box-shadow: 0 0 8px rgba(160, 240, 176, 0.6);
+}
+
+.title {
+  font-size: 48px;
+  font-weight: 900;
+  color: #fff;
+  line-height: 1.25;
+  margin-bottom: 20px;
+  letter-spacing: -1px;
+  opacity: 0;
+  animation: fadeSlideUp 0.8s ease forwards 0.4s;
+}
+
+.highlight {
+  position: relative;
+  display: inline;
+}
+
+.highlight::after {
+  content: "";
+  position: absolute;
+  bottom: 2px;
+  left: 0;
+  width: 100%;
+  height: 8px;
+  background: rgba(255, 220, 100, 0.4);
+  border-radius: 4px;
+  z-index: -1;
+}
+
+.desc {
+  font-size: 17px;
+  color: rgba(255, 255, 255, 0.85);
+  line-height: 1.75;
+  margin-bottom: 36px;
+  font-weight: 400;
+  opacity: 0;
+  animation: fadeSlideUp 0.8s ease forwards 0.6s;
+}
+
+.cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: #fff;
+  color: #1a6b3c;
+  font-size: 16px;
+  font-weight: 700;
+  padding: 16px 36px;
+  border-radius: 50px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+  text-decoration: none;
+  opacity: 0;
+  animation: fadeSlideUp 0.8s ease forwards 0.8s;
+}
+
+.cta:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+}
+
+.arrow {
+  transition: transform 0.3s ease;
+}
+
+.cta:hover .arrow {
+  transform: translateX(4px);
+}
+
+/* ===== 폰 목업 (크기 확대) ===== */
+.mockup {
+  flex: 0 0 auto;
+  position: relative;
+  opacity: 0;
+  animation: fadeSlideRight 1s ease forwards 0.6s;
+}
+
+.phoneFrame {
+  width: 380px;
+  height: 680px;
+  background: #fff;
+  border-radius: 36px;
+  box-shadow:
+    0 30px 80px rgba(0, 0, 0, 0.25),
+    0 0 0 2px rgba(255, 255, 255, 0.15),
+    inset 0 0 0 1px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+  position: relative;
+}
+
+.phoneScreen {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(180deg, #1a6b3c 0%, #2e8b57 100%);
+  padding: 32px 24px 24px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 상단 헤더 */
+.screenHeader {
+  margin-bottom: 24px;
+}
+
+.screenLogo {
+  font-size: 18px;
+  font-weight: 900;
+  color: #fff;
+  letter-spacing: 0.5px;
+}
+
+/* 인사 영역 */
+.greetingRow {
+  margin-bottom: 24px;
+}
+
+.screenGreeting {
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.75);
+  margin-bottom: 4px;
+  font-weight: 500;
+}
+
+.screenName {
+  font-size: 22px;
+  font-weight: 800;
+  color: #fff;
+}
+
+/* ===== 떠다니는 알림 토스트 (폰 바깥) ===== */
+.floatToast {
+  position: absolute;
+  top: 80px;
+  right: -60px;
+  background: #fff;
+  border-radius: 14px;
+  padding: 16px 20px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  animation: floatCard 5s ease-in-out infinite;
+  animation-delay: -2s;
+  z-index: 15;
+}
+
+.toastDot {
+  width: 12px;
+  height: 12px;
+  background: #4caf50;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.toastText {
+  font-size: 16px;
+  color: #333;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* ===== 떠다니는 잔여 사물함 카드 (폰 바깥) ===== */
+.floatCard {
+  position: absolute;
+  bottom: 80px;
+  left: -70px;
+  background: #fff;
+  border-radius: 16px;
+  padding: 14px 18px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  animation: floatCard 4s ease-in-out infinite;
+  z-index: 15;
+}
+
+.floatCardIcon {
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, #4caf50, #81c784);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.floatCardIcon svg {
+  width: 20px;
+  height: 20px;
+  fill: #fff;
+}
+
+.floatCardText {
+  display: flex;
+  flex-direction: column;
+}
+
+.floatCardLabel {
+  font-size: 10px;
+  color: #999;
+  font-weight: 500;
+}
+
+.floatCardValue {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+/* ===== 사물함 카드 ===== */
+.lockerCard {
+  background: #fff;
+  border-radius: 24px;
+  padding: 22px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+.lockerCardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+
+.lockerCardTitle {
+  font-size: 16px;
+  font-weight: 800;
+  color: #1a1a1a;
+}
+
+.lockerCardBadge {
+  font-size: 12px;
+  background: #e8f5e9;
+  color: #2e7d32;
+  padding: 4px 12px;
+  border-radius: 10px;
+  font-weight: 600;
+}
+
+/* ===== 하단: 신청 버튼 ===== */
+.lockerBottom {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: auto;
+}
+
+.applyBtn {
+  font-size: 13px;
+  background: #1a6b3c;
+  color: #fff;
+  border: none;
+  padding: 10px 22px;
+  border-radius: 20px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.applyBtn:hover {
+  background: #2e8b57;
+}
+
+.applyBtn.disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+/* ===== 키프레임 ===== */
+@keyframes fadeSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeSlideRight {
+  from {
+    opacity: 0;
+    transform: translateX(60px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes floatWave {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(20px, -15px) scale(1.03);
+  }
+}
+
+@keyframes floatObj {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-18px);
+  }
+}
+
+@keyframes floatCard {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+/* ===== 반응형 ===== */
+@media (max-width: 1100px) {
+  .content {
+    gap: 40px;
+  }
+
+  .phoneFrame {
+    width: 340px;
+    height: 650px;
+  }
+}
+
+@media (max-width: 900px) {
+  .content {
+    flex-direction: column;
+    padding: 120px 30px 60px;
+    text-align: center;
+  }
+
+  .title {
+    font-size: 34px;
+  }
+
+  .mockup {
+    margin-top: 20px;
+  }
+
+  .phoneFrame {
+    width: 320px;
+    height: 620px;
+  }
+
+  .floatCard {
+    left: 0px;
+    bottom: 40px;
+  }
+
+  .floatToast {
+    right: -10px;
+    top: 50px;
+  }
+}
