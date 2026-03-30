@@ -122,19 +122,7 @@ export default function LoginPage() {
                 </label>
                 <input id="password" className={styles.input} type="password" />
               </div>
-              <div className={styles.inputGroup}>
-                <label className={styles.label} htmlFor="password">
-                  비밀번호
-                </label>
-                <input id="password" className={styles.input} type="password" />
-              </div>
 
-              {/* 비밀번호 찾기 */}
-              <div className={styles.forgotRow}>
-                <a href="/login/findpassword" className={styles.forgotLink}>
-                  비밀번호 찾기
-                </a>
-              </div>
               {/* 비밀번호 찾기 */}
               <div className={styles.forgotRow}>
                 <a href="/login/findpassword" className={styles.forgotLink}>
@@ -157,20 +145,7 @@ export default function LoginPage() {
               <div className={styles.divider}>
                 <span className={styles.dividerText}>또는</span>
               </div>
-              {/* 구분선 */}
-              <div className={styles.divider}>
-                <span className={styles.dividerText}>또는</span>
-              </div>
 
-              {/* 회원가입 */}
-              <p className={styles.signupText}>
-                아직 계정이 없으신가요?{" "}
-                <a href="/signup" className={styles.signupLink}>
-                  회원가입
-                </a>
-              </p>
-            </>
-          )}
               {/* 회원가입 */}
               <p className={styles.signupText}>
                 아직 계정이 없으신가요?{" "}
