@@ -143,7 +143,7 @@ export default function LoginPage() {
                   hover:opacity-90 transition
                 "
                 onClick={() => {
-                  document.cookie = `role=${role}; path=/; SameSite=Lax`;
+                  document.cookie = `role=${role}; path=/`;
                   router.push(role === "admin" ? "/admindashboard" : "/dashboard");
                 }}
               >
