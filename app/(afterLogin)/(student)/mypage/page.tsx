@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import ChangePasswordModal from "./_component/ChangePasswordModal";
+import ChangePasswordModal from "../../_component/ChangePasswordModal";
 import TermsModal from "./_component/TermsModal";
 
 export default function MyPage() {
