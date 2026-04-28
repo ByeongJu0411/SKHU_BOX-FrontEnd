@@ -31,7 +31,7 @@ const stats = [
     ),
     color: "text-red-500",
     value: 7,
-    label: "고장 신고 접수",
+    label: "내가 한 민원",
   },
   {
     icon: (
