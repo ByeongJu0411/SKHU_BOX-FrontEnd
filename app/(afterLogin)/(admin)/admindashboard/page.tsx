@@ -4,6 +4,7 @@ import BuildingUsage from "./_component/BuildingUsage/BuildingUsage";
 import RecentActivity from "./_component/RecentActivity/RecentActivity";
 import PendingComplaints from "./_component/PendingComplaints/PendingComplaints";
 import OperationSummary from "./_component/OperationSummary/OperationSummary";
+import QueueModeControl from "./_component/QueueModeControl";
 
 export default function AdminDashboardPage() {
   const today = new Date();
@@ -34,6 +35,9 @@ export default function AdminDashboardPage() {
           </button>
         </div>
       </div>
+
+      {/* 대기열 모드 컨트롤 */}
+      <QueueModeControl />
 
       <AdminStatsCards />
 
