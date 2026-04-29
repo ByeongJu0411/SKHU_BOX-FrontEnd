@@ -4,11 +4,56 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { FiBox } from "react-icons/fi";
 
-type Role = null | "student" | "admin";
+type Role = null | "USER" | "ADMIN";
 
 export default function LoginPage() {
   const router = useRouter();
   const [role, setRole] = useState<Role>(null);
+  const [studentNumber, setStudentNumber] = useState("");
+  const [password, setPassword] = useState("");
+  const [modal, setModal] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleLogin = async () => {
+    if (!studentNumber || !password) {
+      setModal("학번과 비밀번호를 입력해주세요.");
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      const res = await fetch("/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ studentNumber, password }),
+      });
+
+      const data = await res.json();
+
+      if (!data.success) {
+        setModal(data.message || "로그인에 실패했습니다.");
+        return;
+      }
+
+      const serverRole = data.role;
+
+      if (serverRole === "USER" && role === "ADMIN") {
+        setModal("관리자 권한이 없습니다. 관리자 등록이 필요합니다.");
+        return;
+      }
+
+      if (role === "ADMIN") {
+        router.push("/admindashboard");
+      } else {
+        router.push("/dashboard");
+      }
+    } catch {
+      setModal("서버 연결 실패");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="flex w-dvw h-dvh">
@@ -50,7 +95,7 @@ export default function LoginPage() {
                     hover:border-brand hover:shadow-[0_2px_10px_rgba(74,140,102,0.1)]
                     transition-all
                   "
-                  onClick={() => setRole("student")}
+                  onClick={() => setRole("USER")}
                 >
                   <div className="w-10 h-10 bg-[#f0f7f2] rounded-lg flex items-center justify-center">🎓</div>
                   <div className="flex flex-col flex-1">
@@ -68,7 +113,7 @@ export default function LoginPage() {
                     hover:border-brand hover:shadow-[0_2px_10px_rgba(74,140,102,0.1)]
                     transition-all
                   "
-                  onClick={() => setRole("admin")}
+                  onClick={() => setRole("ADMIN")}
                 >
                   <div className="w-10 h-10 bg-[#f0f7f2] rounded-lg flex items-center justify-center">🔐</div>
                   <div className="flex flex-col flex-1">
@@ -97,12 +142,12 @@ export default function LoginPage() {
           {/* ===== 로그인 폼 ===== */}
           {role !== null && (
             <>
-              <p className="text-sm text-gray-400 mb-5">{role === "student" ? "학생으로 로그인" : "관리자로 로그인"}</p>
+              <p className="text-sm text-gray-400 mb-5">{role === "USER" ? "학생으로 로그인" : "관리자로 로그인"}</p>
 
               {/* 역할 표시 */}
               <div className="flex items-center justify-between bg-[#f0f7f2] border border-[#d4e8da] rounded-lg px-3 py-2 mb-5">
                 <span className="text-sm font-semibold text-green-700">
-                  {role === "student" ? "🎓 학생" : "🔐 관리자"}
+                  {role === "USER" ? "🎓 학생" : "🔐 관리자"}
                 </span>
                 <button className="text-xs font-semibold text-brand hover:underline" onClick={() => setRole(null)}>
                   변경
@@ -114,6 +159,8 @@ export default function LoginPage() {
                 <label className="block text-sm font-semibold mb-1">학번</label>
                 <input
                   type="text"
+                  value={studentNumber}
+                  onChange={(e) => setStudentNumber(e.target.value)}
                   placeholder="202111111"
                   className="w-full h-11 px-3 border text-[12px] border-gray-200 rounded-lg text-sm focus:border-brand outline-none"
                 />
@@ -123,6 +170,8 @@ export default function LoginPage() {
                 <label className="block text-sm font-semibold mb-1">비밀번호</label>
                 <input
                   type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                   className="w-full h-11 px-3 border border-gray-200 rounded-lg text-sm focus:border-brand outline-none"
                 />
               </div>
@@ -142,12 +191,11 @@ export default function LoginPage() {
                   text-white text-[15px] font-bold
                   hover:opacity-90 transition
                 "
-                onClick={() => {
-                  document.cookie = `role=${role}; path=/`;
-                  router.push(role === "admin" ? "/admindashboard" : "/dashboard");
-                }}
+                onClick={handleLogin}
+                disabled={isLoading}
+                onKeyDown={(e) => e.key === "Enter" && handleLogin()}
               >
-                로그인
+                {isLoading ? "로그인 중..." : "로그인"}
               </button>
 
               {/* 구분선 */}
@@ -175,6 +223,16 @@ export default function LoginPage() {
 
       {/* 오른쪽 영역 */}
       <div className="flex-1 bg-white max-md:hidden" />
+      {modal && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center">
+          <div className="bg-white p-6 rounded-xl shadow-lg w-[300px] text-center">
+            <p className="text-sm mb-4">{modal}</p>
+            <button className="px-4 py-2 bg-brand text-white rounded-lg" onClick={() => setModal("")}>
+              확인
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -76,9 +76,9 @@ export default function SignupStep3() {
 
           <button
             className="w-full h-[46px] min-h-[46px] shrink-0 rounded-xl bg-gradient-to-br from-[#3a7d5c] to-[#5cb882] text-white text-[15px] font-bold hover:opacity-90 transition-opacity"
-            onClick={() => router.push("/")}
+            onClick={() => router.push("/login")}
           >
-            사물함 신청하러 가기
+            로그인하러 가기
           </button>
 
           <p className="mt-auto pt-8 text-[11px] text-gray-300">©2026 SKHUBOX 성공회대학교 사물함 예약 서비스</p>
