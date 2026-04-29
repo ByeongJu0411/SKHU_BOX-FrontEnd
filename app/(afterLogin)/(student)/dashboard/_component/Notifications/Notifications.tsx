@@ -3,31 +3,15 @@
 import { useState } from "react";
 import NotificationsModal from "./NotificationsModal";
 
-const notices = [
-  {
-    text: "1학기 사물함 신청이 시작되었습니다.",
-    date: "2026.03.01",
-    author: "관리팀",
-    badge: "공지",
-    badgeColor: "bg-brand",
-  },
-  {
-    text: "새천년관 2층 B구역 사물함 점검 안내 (3/28-29)",
-    date: "2026.03.20",
-    author: "학생팀",
-    badge: "안내",
-    badgeColor: "bg-orange-500",
-  },
-  {
-    text: "수리요청 #0312 처리 완료되었습니다.",
-    date: "2026.03.18",
-    author: "관리팀",
-    badge: "완료",
-    badgeColor: "bg-blue-500",
-  },
-];
+interface Notice {
+  id: number;
+  title: string;
+  content: string;
+  pinned: boolean;
+  createdAt: string;
+}
 
-export default function Notifications() {
+export default function Notifications({ notices }: { notices: Notice[] }) {
   const [showModal, setShowModal] = useState(false);
 
   return (
@@ -42,32 +26,35 @@ export default function Notifications() {
             전체보기
           </button>
         </div>
-        <ul className="list-none m-0 p-0 flex flex-col">
-          {notices.map((n, i) => (
-            <li
-              key={i}
-              className="flex items-center justify-between gap-2.5 py-2.5 border-b border-gray-50 last:border-b-0"
-            >
-              <div className="flex items-start gap-2.5 flex-1 min-w-0">
-                <span className="w-2 h-2 bg-brand rounded-full mt-[5px] shrink-0" />
-                <div className="flex flex-col gap-0.5 min-w-0">
-                  <span className="text-[13px] font-semibold text-gray-900 truncate">{n.text}</span>
-                  <span className="text-[11px] text-gray-300">
-                    {n.date} · {n.author}
-                  </span>
-                </div>
-              </div>
-              <span
-                className={`text-[11px] font-bold text-white px-2.5 py-1 rounded-lg whitespace-nowrap shrink-0 ${n.badgeColor}`}
+
+        {notices.length === 0 ? (
+          <p className="text-sm text-gray-400">공지사항이 없습니다.</p>
+        ) : (
+          <ul className="list-none m-0 p-0 flex flex-col">
+            {notices.slice(0, 3).map((n) => (
+              <li
+                key={n.id}
+                className="flex items-center justify-between gap-2.5 py-2.5 border-b border-gray-50 last:border-b-0"
               >
-                {n.badge}
-              </span>
-            </li>
-          ))}
-        </ul>
+                <div className="flex items-start gap-2.5 flex-1 min-w-0">
+                  <span className="w-2 h-2 bg-brand rounded-full mt-[5px] shrink-0" />
+                  <div className="flex flex-col gap-0.5 min-w-0">
+                    <span className="text-[13px] font-semibold text-gray-900 truncate">{n.title}</span>
+                    <span className="text-[11px] text-gray-300">{n.createdAt}</span>
+                  </div>
+                </div>
+                {n.pinned && (
+                  <span className="text-[11px] font-bold text-white px-2.5 py-1 rounded-lg whitespace-nowrap shrink-0 bg-brand">
+                    공지
+                  </span>
+                )}
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
 
-      <NotificationsModal isOpen={showModal} onClose={() => setShowModal(false)} />
+      <NotificationsModal isOpen={showModal} onClose={() => setShowModal(false)} notices={notices} />
     </>
   );
 }

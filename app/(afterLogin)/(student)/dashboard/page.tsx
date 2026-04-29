@@ -2,10 +2,26 @@ import MyLocker from "./_component/MyLocker/MyLocker";
 import StatsCards from "./_component/StatsCards/StatsCards";
 import QuickLinks from "./_component/QuickLinks/QuickLinks";
 import Notifications from "./_component/Notifications/Notifications";
+import { cookies } from "next/headers";
 
-export default function DashboardPage() {
-  const today = new Date();
-  const dateStr = `${today.getFullYear()}년 ${String(today.getMonth() + 1).padStart(2, "0")}월 ${String(today.getDate()).padStart(2, "0")}일`;
+async function getDashboardData() {
+  const cookieStore = await cookies();
+  const token = cookieStore.get("accessToken")?.value;
+
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/dashboard/user`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    cache: "no-store",
+  });
+
+  const data = await res.json();
+  if (!data.success) return null;
+  return data.data;
+}
+
+export default async function DashboardPage() {
+  const data = await getDashboardData();
 
   return (
     <div className="flex flex-col gap-3.5 w-full">
@@ -17,7 +33,7 @@ export default function DashboardPage() {
         </div>
         <div className="flex items-center gap-2.5">
           <span className="text-[13px] text-gray-400 bg-white px-4 py-2 rounded-[10px] border border-gray-100 whitespace-nowrap">
-            {dateStr}
+            {data?.today ?? "-"}
           </span>
           <button className="w-[34px] h-[34px] rounded-[10px] border border-gray-100 bg-white flex items-center justify-center cursor-pointer hover:bg-gray-50 transition-colors">
             <svg
@@ -36,13 +52,18 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <MyLocker />
-      <StatsCards />
+      <MyLocker data={data?.myLocker ?? null} />
+      <StatsCards
+        totalAvailableLockers={data?.totalAvailableLockers ?? 0}
+        totalUsers={data?.totalUsers ?? 0}
+        myComplaints={data?.myComplaints?.length ?? 0}
+        remainingDays={data?.myLocker?.remainingDays ?? 0}
+      />
 
       {/* 하단 2열 */}
       <div className="grid grid-cols-2 gap-3.5 max-md:grid-cols-1">
         <QuickLinks />
-        <Notifications />
+        <Notifications notices={data?.notices ?? []} />
       </div>
     </div>
   );
