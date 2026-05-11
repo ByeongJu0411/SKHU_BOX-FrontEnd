@@ -23,7 +23,7 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      const res = await fetch("/api/login", {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ studentNumber, password }),
@@ -36,16 +36,24 @@ export default function LoginPage() {
         return;
       }
 
-      const serverRole = data.role;
+      const { accessToken, role: serverRole } = data.data;
 
-      if (serverRole === "USER" && role === "ADMIN") {
+      // 관리자 로그인을 선택했는데 서버 role이 USER면 차단
+      if (role === "ADMIN" && serverRole !== "ADMIN") {
         setModal("관리자 권한이 없습니다. 관리자 등록이 필요합니다.");
         return;
       }
 
+      // 사용자가 선택한 역할 기준으로 쿠키 저장 + 이동
       if (role === "ADMIN") {
+        // 관리자 로그인 선택 + 서버도 ADMIN → 관리자 대시보드
+        document.cookie = `accessToken=${accessToken}; path=/; SameSite=Lax`;
+        document.cookie = `role=admin; path=/; SameSite=Lax`;
         router.push("/admindashboard");
       } else {
+        // 학생 로그인 선택 → 서버 role 상관없이 학생 대시보드
+        document.cookie = `accessToken=${accessToken}; path=/; SameSite=Lax`;
+        document.cookie = `role=student; path=/; SameSite=Lax`;
         router.push("/dashboard");
       }
     } catch {
@@ -195,7 +203,7 @@ export default function LoginPage() {
                 disabled={isLoading}
                 onKeyDown={(e) => e.key === "Enter" && handleLogin()}
               >
-                {isLoading ? "로그인 중..." : "로그인"}
+                로그인
               </button>
 
               {/* 구분선 */}
@@ -223,6 +231,18 @@ export default function LoginPage() {
 
       {/* 오른쪽 영역 */}
       <div className="flex-1 bg-white max-md:hidden" />
+      {/* 로딩 오버레이 */}
+      {isLoading && (
+        <div className="fixed inset-0 z-[300] flex items-center justify-center bg-white/80 backdrop-blur-sm">
+          <div className="flex flex-col items-center gap-4">
+            <div className="relative w-10 h-10">
+              <div className="absolute inset-0 rounded-full border-[3px] border-[#e8ebed]" />
+              <div className="absolute inset-0 rounded-full border-[3px] border-transparent border-t-[#191f28] animate-spin" />
+            </div>
+            <span className="text-[14px] font-medium text-[#4e5968]">잠시만 기다려 주세요</span>
+          </div>
+        </div>
+      )}
       {modal && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center">
           <div className="bg-white p-6 rounded-xl shadow-lg w-[300px] text-center">
