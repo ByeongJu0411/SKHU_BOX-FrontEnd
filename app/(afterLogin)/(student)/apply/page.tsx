@@ -41,7 +41,7 @@ export default function ApplyLoadingPage() {
     if (currentStep < steps.length) {
       const timer = setTimeout(() => {
         setCurrentStep((prev) => prev + 1);
-      }, 3000);
+      }, 2000);
       return () => clearTimeout(timer);
     }
   }, [currentStep]);

@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import { buildings } from "../config";
+import { useState, useMemo, useEffect } from "react";
+import { buildings, type LockerApiItem } from "../config";
+import toast from "react-hot-toast";
 
-type LockerStatus = "available" | "selected" | "occupied" | "broken" | "mine";
+type LockerStatus = "available" | "selected" | "occupied" | "broken" | "mine" | "empty";
 
 const statusConfig: Record<LockerStatus, { bg: string }> = {
   available: { bg: "bg-green-100 text-green-800 hover:bg-green-200 cursor-pointer" },
@@ -11,6 +12,7 @@ const statusConfig: Record<LockerStatus, { bg: string }> = {
   occupied: { bg: "bg-red-100 text-red-700" },
   broken: { bg: "bg-gray-100 text-gray-400" },
   mine: { bg: "bg-blue-100 text-blue-700" },
+  empty: { bg: "bg-transparent" }, // 그리드에서 사물함이 없는 빈 칸
 };
 
 const legendItems = [
@@ -21,16 +23,29 @@ const legendItems = [
   { label: "내 사물함", dotColor: "bg-blue-400" },
 ];
 
-// Mock 상태 생성
-function generateLockerStatus(buildingId: string, floorNum: number, zoneName: string, index: number): LockerStatus {
-  const seed = buildingId.charCodeAt(0) * 10000 + floorNum * 1000 + zoneName.charCodeAt(0) * 10 + index;
-  if (seed % 11 === 0) return "broken";
-  if (seed % 3 === 0) return "occupied";
-  if (buildingId === "saecheonnyeon" && floorNum === 4 && zoneName === "복도 좌측" && index === 5) return "mine";
-  return "available";
+// 백엔드 status → 프론트 status 매핑
+function mapApiStatus(apiStatus: string): LockerStatus {
+  switch (apiStatus) {
+    case "NORMAL":
+      return "available";
+    case "ACTIVE":
+      return "occupied";
+    case "IN_USE":
+      return "occupied";
+    case "RESERVED":
+      return "occupied";
+    case "BROKEN":
+      return "broken";
+    default:
+      return "available";
+  }
 }
 
 export default function LockerSelectPage() {
+  const [allLockers, setAllLockers] = useState<LockerApiItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState("");
+
   const [selectedBuildingIdx, setSelectedBuildingIdx] = useState(0);
   const [selectedFloorIdx, setSelectedFloorIdx] = useState(0);
   const [selectedZoneIdx, setSelectedZoneIdx] = useState(0);
@@ -40,46 +55,132 @@ export default function LockerSelectPage() {
   const currentFloor = currentBuilding.floors[selectedFloorIdx];
   const currentZone = currentFloor.zones[selectedZoneIdx];
 
-  // 사물함 생성
-  const lockers = useMemo(() => {
-    const total = currentZone.rows * currentZone.cols;
-    return Array.from({ length: total }, (_, i) => {
-      const num = String(i + 1).padStart(2, "0");
-      const id = `${currentFloor.number}${currentZone.name.charAt(0)}-${num}`;
-      const status = generateLockerStatus(currentBuilding.id, currentFloor.number, currentZone.name, i);
-      return { id, num, status };
-    });
-  }, [currentBuilding.id, currentFloor.number, currentZone]);
+  // API에서 전체 사물함 데이터 가져오기
+  useEffect(() => {
+    const fetchLockers = async () => {
+      try {
+        const token = document.cookie
+          .split("; ")
+          .find((c) => c.startsWith("accessToken="))
+          ?.split("=")[1];
 
-  // 건물별 전체 잔여석
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/lockers`, {
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+          setAllLockers(data.data);
+        } else {
+          setError(data.message || "사물함 정보를 불러올 수 없습니다.");
+        }
+      } catch {
+        setError("서버 연결에 실패했습니다.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchLockers();
+  }, []);
+
+  const handleReserve = async () => {
+    if (!selectedLocker) return;
+
+    // 선택한 사물함의 API id 찾기
+    const locker = lockers.find((l) => l.id === selectedLocker);
+    if (!locker || !locker.apiId) return;
+
+    const token = document.cookie
+      .split("; ")
+      .find((c) => c.startsWith("accessToken="))
+      ?.split("=")[1];
+
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/lockers/reserve`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ lockerId: locker.apiId }),
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        toast.success(`${selectedLocker} 사물함이 예약되었습니다`);
+        setSelectedLocker(null);
+        // 사물함 목록 새로고침
+        const refreshRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/lockers`, {
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+        });
+        const refreshData = await refreshRes.json();
+        if (refreshData.success) setAllLockers(refreshData.data);
+      } else {
+        toast.error(data.message || "예약에 실패했습니다");
+      }
+    } catch {
+      toast.error("서버 연결에 실패했습니다");
+    }
+  };
+
+  // 현재 구역에 해당하는 사물함 필터링 + 그리드 매핑
+  const lockers = useMemo(() => {
+    // API 데이터에서 현재 건물 + 층 + 구역에 해당하는 사물함 필터
+    const zoneLockers = allLockers.filter(
+      (l) =>
+        l.building === currentBuilding.name && l.floor === currentFloor.number && l.locationDetail === currentZone.name,
+    );
+
+    // 그리드 크기만큼 배열 생성
+    const gridSize = currentZone.rows * currentZone.cols;
+
+    return Array.from({ length: gridSize }, (_, i) => {
+      // i번째 칸에 매칭되는 사물함 찾기
+      const apiLocker = zoneLockers[i];
+
+      if (apiLocker) {
+        return {
+          id: apiLocker.lockerNumber,
+          num: apiLocker.lockerNumber,
+          apiId: apiLocker.id,
+          status: mapApiStatus(apiLocker.status),
+        };
+      }
+
+      // 사물함 데이터가 없는 빈 칸
+      return {
+        id: `empty-${i}`,
+        num: "",
+        apiId: null,
+        status: "empty" as LockerStatus,
+      };
+    });
+  }, [allLockers, currentBuilding.name, currentFloor.number, currentZone]);
+
+  // 건물별 잔여석 (API 데이터 기반)
   const buildingAvailableCounts = useMemo(() => {
     return buildings.map((b) => {
-      let count = 0;
-      b.floors.forEach((f) => {
-        f.zones.forEach((z) => {
-          const total = z.rows * z.cols;
-          for (let i = 0; i < total; i++) {
-            if (generateLockerStatus(b.id, f.number, z.name, i) === "available") count++;
-          }
-        });
-      });
-      return count;
+      return allLockers.filter((l) => l.building === b.name && l.status === "NORMAL").length;
     });
-  }, []);
+  }, [allLockers]);
 
   // 층별 잔여석
   const floorAvailableCounts = useMemo(() => {
     return currentBuilding.floors.map((floor) => {
-      let count = 0;
-      floor.zones.forEach((zone) => {
-        const total = zone.rows * zone.cols;
-        for (let i = 0; i < total; i++) {
-          if (generateLockerStatus(currentBuilding.id, floor.number, zone.name, i) === "available") count++;
-        }
-      });
-      return count;
+      return allLockers.filter(
+        (l) => l.building === currentBuilding.name && l.floor === floor.number && l.status === "NORMAL",
+      ).length;
     });
-  }, [currentBuilding]);
+  }, [allLockers, currentBuilding]);
 
   const handleBuildingChange = (idx: number) => {
     setSelectedBuildingIdx(idx);
@@ -105,6 +206,39 @@ export default function LockerSelectPage() {
     }
   };
 
+  // 로딩 중
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="flex flex-col items-center gap-4">
+          <div className="relative w-10 h-10">
+            <div className="absolute inset-0 rounded-full border-[3px] border-[#e8ebed]" />
+            <div className="absolute inset-0 rounded-full border-[3px] border-transparent border-t-[#191f28] animate-spin" />
+          </div>
+          <span className="text-[14px] font-medium text-[#4e5968]">사물함 정보를 불러오는 중...</span>
+        </div>
+      </div>
+    );
+  }
+
+  // 에러
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="flex flex-col items-center gap-3 text-center">
+          <span className="text-[40px]">⚠️</span>
+          <span className="text-[14px] text-[#4e5968]">{error}</span>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-2 px-4 py-2 bg-brand text-white text-[13px] font-bold rounded-lg cursor-pointer border-none hover:opacity-90"
+          >
+            다시 시도
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col gap-4 w-full">
       <div>
@@ -113,9 +247,9 @@ export default function LockerSelectPage() {
       </div>
 
       <div className="flex gap-4 items-start max-[900px]:flex-col">
-        {/* ===== 좌측: 건물 탭 + 층 선택 ===== */}
+        {/* ===== 좌측: 건물 + 층 선택 ===== */}
         <div className="w-[260px] min-w-[260px] flex flex-col gap-2.5 max-[900px]:w-full max-[900px]:min-w-0">
-          {/* 건물 선택 탭 */}
+          {/* 건물 선택 */}
           {buildings.map((b, idx) => {
             const isActive = selectedBuildingIdx === idx;
             return (
@@ -133,10 +267,7 @@ export default function LockerSelectPage() {
                 `}
               >
                 <div
-                  className={`
-                  w-10 h-10 rounded-xl flex items-center justify-center shrink-0
-                  ${isActive ? "bg-green-50" : "bg-gray-50"}
-                `}
+                  className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${isActive ? "bg-green-50" : "bg-gray-50"}`}
                 >
                   <svg
                     className={`w-5 h-5 ${isActive ? "text-brand" : "text-gray-400"}`}
@@ -168,7 +299,7 @@ export default function LockerSelectPage() {
             );
           })}
 
-          {/* 선택된 건물의 층 리스트 */}
+          {/* 층 리스트 */}
           <div className="border-t border-gray-100 pt-2.5 mt-1">
             {currentBuilding.floors.map((floor, idx) => {
               const isSelected = selectedFloorIdx === idx;
@@ -179,16 +310,11 @@ export default function LockerSelectPage() {
                   className={`
                     w-full flex items-center gap-3 p-3 rounded-xl mb-1
                     border-2 text-left cursor-pointer font-sans transition-all duration-200
-                    ${
-                      isSelected ? "bg-white border-brand/50 shadow-sm" : "bg-white border-transparent hover:bg-gray-50"
-                    }
+                    ${isSelected ? "bg-white border-brand/50 shadow-sm" : "bg-white border-transparent hover:bg-gray-50"}
                   `}
                 >
                   <div
-                    className={`
-                    w-9 h-9 rounded-lg flex items-center justify-center shrink-0 text-sm font-black
-                    ${isSelected ? "bg-brand text-white" : "bg-gray-100 text-gray-400"}
-                  `}
+                    className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 text-sm font-black ${isSelected ? "bg-brand text-white" : "bg-gray-100 text-gray-400"}`}
                   >
                     {floor.number}F
                   </div>
@@ -220,12 +346,14 @@ export default function LockerSelectPage() {
           <div className="flex gap-2 mb-3">
             {currentFloor.zones.map((zone, idx) => {
               const isActive = selectedZoneIdx === idx;
-              const total = zone.rows * zone.cols;
-              let avail = 0;
-              for (let i = 0; i < total; i++) {
-                if (generateLockerStatus(currentBuilding.id, currentFloor.number, zone.name, i) === "available")
-                  avail++;
-              }
+              const avail = allLockers.filter(
+                (l) =>
+                  l.building === currentBuilding.name &&
+                  l.floor === currentFloor.number &&
+                  l.locationDetail === zone.name &&
+                  l.status === "NORMAL",
+              ).length;
+
               return (
                 <button
                   key={zone.name}
@@ -242,8 +370,7 @@ export default function LockerSelectPage() {
                 >
                   {zone.name}
                   <span
-                    className={`text-[11px] font-bold px-1.5 py-0.5 rounded-full
-                    ${isActive ? "bg-white/25" : "bg-gray-100 text-gray-400"}`}
+                    className={`text-[11px] font-bold px-1.5 py-0.5 rounded-full ${isActive ? "bg-white/25" : "bg-gray-100 text-gray-400"}`}
                   >
                     {avail}석
                   </span>
@@ -262,41 +389,40 @@ export default function LockerSelectPage() {
             ))}
           </div>
 
+          {/* 그리드 정보 */}
           <p className="text-[12px] text-gray-400 mb-2.5">
-            {currentFloor.label} {currentZone.name} 총 {currentZone.rows * currentZone.cols}칸
+            {currentFloor.label} {currentZone.name} · 총 {lockers.filter((l) => l.status !== "empty").length}칸
           </p>
 
-          {/* 사물함 그리드 */}
-          <div
-            className="grid gap-1.5 mb-2 justify-center"
-            style={{
-              gridTemplateColumns: `repeat(${currentZone.cols}, 88px)`,
-            }}
-          >
-            {lockers.map((locker) => {
-              const isSelected = selectedLocker === locker.id;
-              const displayStatus = isSelected ? "selected" : locker.status;
-              const cfg = statusConfig[displayStatus];
-              const isClickable = locker.status === "available" || isSelected;
-              return (
-                <button
-                  key={locker.id}
-                  onClick={() => handleLockerClick(locker.id, locker.status)}
-                  disabled={!isClickable}
-                  className={`
-                    aspect-square rounded-lg flex flex-col items-center justify-center
-                    gap-0.5 border-none font-sans transition-all duration-150
-                    ${cfg.bg} ${!isClickable ? "cursor-not-allowed" : ""}
-                  `}
-                >
-                  <span className="text-[12px] font-bold">{locker.num}</span>
-                  {isSelected && <span className="text-[8px] font-semibold">선택됨</span>}
-                  {locker.status === "occupied" && <span className="text-[8px]">사용중</span>}
-                  {locker.status === "available" && !isSelected && <span className="text-[8px]">사용 가능</span>}
-                  {locker.status === "mine" && <span className="text-[8px]">내 사물함</span>}
-                </button>
-              );
-            })}
+          {/* 사물함 그리드 — 고정 크기 셀, 넘치면 가로 스크롤 */}
+          <div className="overflow-x-auto overflow-y-auto max-h-[450px] mb-4 justify-items-center align-items-center">
+            <div className="grid gap-1 w-fit p-1" style={{ gridTemplateColumns: `repeat(${currentZone.cols}, 68px)` }}>
+              {lockers.map((locker) => {
+                if (locker.status === "empty") {
+                  return <div key={locker.id} className="w-[68px] h-[68px]" />;
+                }
+
+                const isSelected = selectedLocker === locker.id;
+                const displayStatus = isSelected ? "selected" : locker.status;
+                const cfg = statusConfig[displayStatus];
+                const isClickable = locker.status === "available" || isSelected;
+
+                return (
+                  <button
+                    key={locker.id}
+                    onClick={() => handleLockerClick(locker.id, locker.status)}
+                    disabled={!isClickable}
+                    className={`
+                      w-[68px] h-[68px] rounded-md flex flex-col items-center justify-center
+                      border-none font-sans transition-all duration-150
+                      ${cfg.bg} ${!isClickable ? "cursor-not-allowed" : ""}
+                    `}
+                  >
+                    <span className="text-[11px] font-bold leading-tight">{locker.num}</span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           {/* 하단 */}
@@ -324,6 +450,7 @@ export default function LockerSelectPage() {
                 취소
               </button>
               <button
+                onClick={handleReserve}
                 disabled={!selectedLocker}
                 className={`
                   px-5 py-2 border-none rounded-lg text-[13px] font-bold font-sans transition-all duration-200
@@ -334,7 +461,7 @@ export default function LockerSelectPage() {
                   }
                 `}
               >
-                이 사물함 신청하기
+                신청하기
               </button>
             </div>
           </div>
