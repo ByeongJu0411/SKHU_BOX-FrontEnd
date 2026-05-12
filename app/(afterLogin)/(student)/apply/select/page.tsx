@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { buildings, type LockerApiItem } from "../config";
 import toast from "react-hot-toast";
-
+import { fetchWithAuth } from "@/app/lib/fetchWithAuth";
 type LockerStatus = "available" | "selected" | "occupied" | "broken" | "mine" | "empty";
 
 const statusConfig: Record<LockerStatus, { bg: string }> = {
@@ -59,17 +59,7 @@ export default function LockerSelectPage() {
   useEffect(() => {
     const fetchLockers = async () => {
       try {
-        const token = document.cookie
-          .split("; ")
-          .find((c) => c.startsWith("accessToken="))
-          ?.split("=")[1];
-
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/lockers`, {
-          headers: {
-            "Content-Type": "application/json",
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
-          },
-        });
+        const res = await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/api/lockers`);
 
         const data = await res.json();
 
@@ -101,12 +91,8 @@ export default function LockerSelectPage() {
       ?.split("=")[1];
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/lockers/reserve`, {
+      const res = await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/api/lockers/reserve`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
         body: JSON.stringify({ lockerId: locker.apiId }),
       });
 

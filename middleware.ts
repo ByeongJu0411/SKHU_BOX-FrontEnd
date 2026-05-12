@@ -1,19 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-/*
- * ✅ 미들웨어 — 인증 보호
- *
- * role 쿠키가 없으면 로그인 페이지로 리다이렉트.
- * role 쿠키가 있으면 역할에 맞는 페이지만 접근 가능.
- *
- * 학생(role=student): /dashboard, /apply, /status, /support, /mypage
- * 관리자(role=admin): /admindashboard, /lockers, /complaints, /students, /adminmanage, /analytics, /settings, /admin/mypage
- */
-
-// 로그인 없이 접근 가능한 경로
 const publicPaths = ["/", "/login", "/signup", "/login/findpassword"];
-
-// 관리자 전용 경로
 const adminPaths = [
   "/admindashboard",
   "/lockers",
@@ -23,47 +10,69 @@ const adminPaths = [
   "/analytics",
   "/settings",
 ];
-
-// 학생 전용 경로
 const studentPaths = ["/dashboard", "/apply", "/status", "/support", "/mypage"];
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // 정적 파일, API, _next 등은 무시
-  if (
-    pathname.startsWith("/_next") ||
-    pathname.startsWith("/api") ||
-    pathname.includes(".") // .ico, .png 등
-  ) {
+  if (pathname.startsWith("/_next") || pathname.startsWith("/api") || pathname.includes(".")) {
     return NextResponse.next();
   }
 
-  // public 경로는 통과
   const isPublic = publicPaths.some((path) => pathname === path || pathname.startsWith(path + "/"));
   if (isPublic) return NextResponse.next();
 
-  // 쿠키에서 role 확인
+  const accessToken = request.cookies.get("accessToken")?.value;
+  const refreshToken = request.cookies.get("refreshToken")?.value;
   const role = request.cookies.get("role")?.value;
 
-  // 로그인 안 됨 → /login으로 리다이렉트
-  if (!role) {
-    const loginUrl = new URL("/login", request.url);
-    return NextResponse.redirect(loginUrl);
+  // 토큰 둘 다 없으면 로그인으로
+  if (!accessToken && !refreshToken) {
+    return NextResponse.redirect(new URL("/login", request.url));
   }
 
-  // 관리자 경로에 학생이 접근 시도
+  // accessToken 없고 refreshToken만 있으면 갱신 시도
+  if (!accessToken && refreshToken) {
+    try {
+      const res = await fetch(`${process.env.API_URL}/api/auth/refresh`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ refreshToken }),
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        const response = NextResponse.next();
+        response.cookies.set("accessToken", data.data.accessToken, { path: "/", sameSite: "lax" });
+        response.cookies.set("refreshToken", data.data.refreshToken, { path: "/", sameSite: "lax" });
+        return response;
+      }
+    } catch {
+      // 갱신 실패
+    }
+
+    // 갱신 실패 → 쿠키 정리 후 로그인으로
+    const response = NextResponse.redirect(new URL("/login", request.url));
+    response.cookies.delete("accessToken");
+    response.cookies.delete("refreshToken");
+    response.cookies.delete("role");
+    return response;
+  }
+
+  // 역할 기반 접근 제어
+  if (!role) {
+    return NextResponse.redirect(new URL("/login", request.url));
+  }
+
   const isAdminPath = adminPaths.some((path) => pathname === path || pathname.startsWith(path + "/"));
   if (isAdminPath && role !== "admin") {
-    const dashboardUrl = new URL("/dashboard", request.url);
-    return NextResponse.redirect(dashboardUrl);
+    return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 
-  // 학생 경로에 관리자가 접근 시도
   const isStudentPath = studentPaths.some((path) => pathname === path || pathname.startsWith(path + "/"));
   if (isStudentPath && role !== "student") {
-    const adminUrl = new URL("/admindashboard", request.url);
-    return NextResponse.redirect(adminUrl);
+    return NextResponse.redirect(new URL("/admindashboard", request.url));
   }
 
   return NextResponse.next();

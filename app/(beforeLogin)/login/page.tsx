@@ -36,7 +36,7 @@ export default function LoginPage() {
         return;
       }
 
-      const { accessToken, role: serverRole } = data.data;
+      const { accessToken, refreshToken, role: serverRole } = data.data;
 
       // 관리자 로그인을 선택했는데 서버 role이 USER면 차단
       if (role === "ADMIN" && serverRole !== "ADMIN") {
@@ -48,11 +48,13 @@ export default function LoginPage() {
       if (role === "ADMIN") {
         // 관리자 로그인 선택 + 서버도 ADMIN → 관리자 대시보드
         document.cookie = `accessToken=${accessToken}; path=/; SameSite=Lax`;
+        document.cookie = `refreshToken=${refreshToken}; path=/; SameSite=Lax`;
         document.cookie = `role=admin; path=/; SameSite=Lax`;
         router.push("/admindashboard");
       } else {
         // 학생 로그인 선택 → 서버 role 상관없이 학생 대시보드
         document.cookie = `accessToken=${accessToken}; path=/; SameSite=Lax`;
+        document.cookie = `refreshToken=${refreshToken}; path=/; SameSite=Lax`;
         document.cookie = `role=student; path=/; SameSite=Lax`;
         router.push("/dashboard");
       }
