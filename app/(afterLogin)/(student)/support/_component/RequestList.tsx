@@ -2,14 +2,8 @@ import type { RequestItem, RequestStatus } from "../type";
 
 interface RequestListProps {
   requests: RequestItem[];
-  onSelect: (id: string) => void;
+  onSelect: (id: number) => void;
 }
-
-const categoryIcons: Record<string, string> = {
-  "수리 요청": "🔧",
-  "자리 이동": "↔️",
-  문의: "💬",
-};
 
 const statusStyle: Record<RequestStatus, string> = {
   접수대기: "text-red-500",
@@ -37,24 +31,24 @@ export default function RequestList({ requests, onSelect }: RequestListProps) {
                 hover:bg-gray-50 transition-colors rounded-lg
               "
             >
-              {/* 카테고리 아이콘 */}
+              {/* 아이콘 */}
               <div className="w-10 h-10 rounded-full bg-green-50 flex items-center justify-center shrink-0 text-lg">
-                {categoryIcons[req.category] || "📋"}
+                📋
               </div>
 
               {/* 내용 */}
               <div className="flex-1 min-w-0">
                 <div className="flex items-start justify-between gap-2 mb-1">
                   <span className="text-[14px] font-bold text-gray-900">
-                    {req.title}
-                    <span className="text-gray-300 font-normal text-[12px] ml-1.5">#{req.id}</span>
+                    민원 #{req.id}
+                    {req.lockerNumber && (
+                      <span className="text-gray-300 font-normal text-[12px] ml-1.5">{req.lockerNumber}</span>
+                    )}
                   </span>
                   <span className={`text-[12px] font-bold shrink-0 ${statusStyle[req.status]}`}>{req.status}</span>
                 </div>
-                <p className="text-[12px] text-gray-400 leading-relaxed mb-1.5 line-clamp-1">{req.description}</p>
-                <span className="text-[11px] text-gray-300">
-                  {req.createdAt} · 📍 {req.building} {req.location}
-                </span>
+                <p className="text-[12px] text-gray-400 leading-relaxed mb-1.5 line-clamp-2">{req.content}</p>
+                <span className="text-[11px] text-gray-300">{req.createdAt}</span>
               </div>
             </button>
           ))}

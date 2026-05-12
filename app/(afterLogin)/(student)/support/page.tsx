@@ -1,121 +1,179 @@
 "use client";
 
-import { useState } from "react";
-import type { RequestItem, RequestCategory, RequestStatus } from "./type";
+import { useState, useEffect } from "react";
+import { fetchWithAuth } from "@/app/lib/fetchWithAuth";
+import toast from "react-hot-toast";
+import type { ComplaintApiItem, RequestItem, RequestStatus } from "./type";
 import RequestList from "./_component/RequestList";
 import NewRequestForm from "./_component/NewRequestForm";
 import RequestDetailModal from "./_component/RequestDetailModal";
+import type { LockerApiItem } from "../apply/config";
 
-type TabType = "전체" | RequestCategory | "완료";
+// 백엔드 status → 프론트 status 매핑
+function mapApiStatus(apiStatus: string): RequestStatus {
+  switch (apiStatus) {
+    case "PENDING":
+      return "접수대기";
+    case "IN_PROGRESS":
+      return "처리중";
+    case "RESOLVED":
+      return "처리완료";
+    default:
+      return "접수대기";
+  }
+}
 
-const MOCK_REQUESTS: RequestItem[] = [
-  {
-    id: "C325",
-    title: "사물함 잠금장치 고장",
-    description: "3A-05 사물함 비밀번호 잠금장치가 작동하지 않아 열 수가 없습니다. 확인 부탁드립니다.",
-    category: "수리 요청",
-    lockerId: "3A-05",
-    building: "새천년관",
-    location: "3층 A구역",
-    createdAt: "2026.03.24",
-    status: "접수대기",
-    content:
-      "사물함 비밀번호 잠금장치가 풀리지 않아 열 수가 없습니다. 어제부터 비밀번호를 정확히 입력해도 잠금이 풀리지 않는 상태입니다. 내부에 노트북 충전기와 교재가 있어서 빠른 확인 부탁드립니다.",
-  },
-  {
-    id: "C312",
-    title: "사물함 문 경첩 파손",
-    description: "사물함 문이 제대로 닫히지 않고 경첩 부분이 느슨합니다.",
-    category: "수리 요청",
-    lockerId: "3A-07",
-    building: "새천년관",
-    location: "3층 A구역",
-    createdAt: "2026.03.12",
-    status: "처리중",
-    content: "사물함 문이 제대로 닫히지 않고 경첩 부분이 느슨합니다. 물건이 떨어질 위험이 있어 수리 부탁드립니다.",
-  },
-  {
-    id: "C308",
-    title: "자리 이동 요청",
-    description: "같은 층 B구역으로 자리 이동을 희망합니다. 수업 동선 때문에 B구역이 더 편합니다.",
-    category: "자리 이동",
-    lockerId: "3A-04",
-    building: "새천년관",
-    location: "3층 A구역",
-    createdAt: "2026.03.08",
-    status: "접수대기",
-    content: "같은 층 B구역으로 자리 이동을 희망합니다. 수업 동선 때문에 B구역이 더 편합니다.",
-  },
-  {
-    id: "C303",
-    title: "개인 물품 분실 신고",
-    description: "사물함 주변에서 에어팟을 분실했습니다. 습득을 확인 부탁드립니다.",
-    category: "문의",
-    lockerId: "3A-02",
-    building: "새천년관",
-    location: "3층 A구역",
-    createdAt: "2026.02.28",
-    status: "처리완료",
-    content: "사물함 주변에서 에어팟을 분실했습니다. 습득을 확인 부탁드립니다.",
-  },
-];
+// ISO 날짜 → 표시용 포맷
+function formatDate(iso: string): string {
+  const d = new Date(iso);
+  return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, "0")}.${String(d.getDate()).padStart(2, "0")}`;
+}
+
+// API 응답 → 프론트 타입 변환
+function toRequestItem(api: ComplaintApiItem): RequestItem {
+  return {
+    id: api.id,
+    lockerNumber: api.lockerNumber,
+    content: api.content,
+    answer: api.answer,
+    status: mapApiStatus(api.status),
+    createdAt: formatDate(api.createdAt),
+  };
+}
+
+type TabType = "전체" | "접수대기" | "처리중" | "처리완료";
 
 const tabs: { label: TabType }[] = [
   { label: "전체" },
-  { label: "수리 요청" },
-  { label: "자리 이동" },
-  { label: "문의" },
-  { label: "완료" },
+  { label: "접수대기" },
+  { label: "처리중" },
+  { label: "처리완료" },
 ];
 
 export default function SupportPage() {
-  const [requests, setRequests] = useState(MOCK_REQUESTS);
+  const [requests, setRequests] = useState<RequestItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<TabType>("전체");
   const [showForm, setShowForm] = useState(false);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [myLockerNumber, setMyLockerNumber] = useState("");
+  const [selectedRequest, setSelectedRequest] = useState<RequestItem | null>(null);
 
-  const selectedRequest = requests.find((r) => r.id === selectedId) || null;
+  // 민원 목록 조회
+  const loadComplaints = async () => {
+    try {
+      const res = await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/api/complaints/my`);
+      const data = await res.json();
+
+      if (data.success) {
+        setRequests(data.data.map(toRequestItem));
+      }
+      // 내 사물함 번호 조회
+      const lockerRes = await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/api/lockers`);
+      const lockerData = await lockerRes.json();
+      if (lockerData.success) {
+        const myLocker = lockerData.data.find((l: LockerApiItem) => l.status === "ACTIVE");
+        if (myLocker) setMyLockerNumber(myLocker.lockerNumber);
+      }
+    } catch {
+      // 에러 처리
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadComplaints();
+  }, []);
 
   // 탭 필터링
   const filtered = (() => {
     if (activeTab === "전체") return requests;
-    if (activeTab === "완료") return requests.filter((r) => r.status === "처리완료");
-    return requests.filter((r) => r.category === activeTab);
+    return requests.filter((r) => r.status === activeTab);
   })();
 
   // 탭별 카운트
   const counts: Record<TabType, number> = {
     전체: requests.length,
-    "수리 요청": requests.filter((r) => r.category === "수리 요청").length,
-    "자리 이동": requests.filter((r) => r.category === "자리 이동").length,
-    문의: requests.filter((r) => r.category === "문의").length,
-    완료: requests.filter((r) => r.status === "처리완료").length,
+    접수대기: requests.filter((r) => r.status === "접수대기").length,
+    처리중: requests.filter((r) => r.status === "처리중").length,
+    처리완료: requests.filter((r) => r.status === "처리완료").length,
   };
 
   // 새 요청 접수
-  const handleNewRequest = (data: { category: RequestCategory; lockerId: string; title: string; content: string }) => {
-    const newReq: RequestItem = {
-      id: `C${String(Date.now()).slice(-3)}`,
-      title: data.title,
-      description: data.content.slice(0, 60),
-      category: data.category,
-      lockerId: data.lockerId,
-      building: "새천년관",
-      location: "3층 A구역",
-      createdAt: new Date().toISOString().slice(0, 10).replace(/-/g, "."),
-      status: "접수대기",
-      content: data.content,
-    };
-    setRequests((prev) => [newReq, ...prev]);
-    setShowForm(false);
+  const handleNewRequest = async (data: { lockerNumber: string; content: string }) => {
+    try {
+      const res = await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/api/complaints`, {
+        method: "POST",
+        body: JSON.stringify({
+          lockerNumber: data.lockerNumber,
+          content: data.content,
+        }),
+      });
+
+      const result = await res.json();
+
+      if (result.success) {
+        toast.success("민원이 접수되었습니다");
+        setShowForm(false);
+        await loadComplaints();
+      } else {
+        toast.error(result.message || "민원 접수에 실패했습니다");
+      }
+    } catch {
+      toast.error("서버 연결에 실패했습니다");
+    }
   };
 
-  // 요청 취소
-  const handleCancel = (id: string) => {
-    if (!confirm("이 요청을 취소하시겠습니까?")) return;
-    setRequests((prev) => prev.filter((r) => r.id !== id));
-    setSelectedId(null);
+  const handleSelect = async (id: number) => {
+    try {
+      const res = await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/api/complaints/${id}`);
+      const data = await res.json();
+
+      if (data.success) {
+        setSelectedRequest(toRequestItem(data.data));
+      } else {
+        toast.error("민원 상세를 불러올 수 없습니다");
+      }
+    } catch {
+      toast.error("서버 연결에 실패했습니다");
+    }
   };
+
+  const handleCancel = async (id: number) => {
+    if (!confirm("이 민원을 취소하시겠습니까?")) return;
+
+    try {
+      const res = await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/api/complaints/${id}`, {
+        method: "DELETE",
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        toast.success("민원이 취소되었습니다");
+        setSelectedRequest(null);
+        await loadComplaints();
+      } else {
+        toast.error(data.message || "민원 취소에 실패했습니다");
+      }
+    } catch {
+      toast.error("서버 연결에 실패했습니다");
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="flex flex-col items-center gap-4">
+          <div className="relative w-10 h-10">
+            <div className="absolute inset-0 rounded-full border-[3px] border-[#e8ebed]" />
+            <div className="absolute inset-0 rounded-full border-[3px] border-transparent border-t-[#191f28] animate-spin" />
+          </div>
+          <span className="text-[14px] font-medium text-[#4e5968]">민원 내역을 불러오는 중...</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-4 w-full">
@@ -169,13 +227,23 @@ export default function SupportPage() {
 
       {/* 리스트 + (폼) */}
       <div className="flex gap-4 items-start max-[900px]:flex-col">
-        <RequestList requests={filtered} onSelect={setSelectedId} />
-        {showForm && <NewRequestForm onSubmit={handleNewRequest} onClose={() => setShowForm(false)} />}
+        <RequestList requests={filtered} onSelect={handleSelect} />
+        {showForm && (
+          <NewRequestForm
+            defaultLockerNumber={myLockerNumber}
+            onSubmit={handleNewRequest}
+            onClose={() => setShowForm(false)}
+          />
+        )}
       </div>
 
       {/* 상세 모달 */}
       {selectedRequest && (
-        <RequestDetailModal request={selectedRequest} onClose={() => setSelectedId(null)} onCancel={handleCancel} />
+        <RequestDetailModal
+          request={selectedRequest}
+          onClose={() => setSelectedRequest(null)}
+          onCancel={handleCancel}
+        />
       )}
     </div>
   );
