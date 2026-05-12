@@ -1,18 +1,17 @@
-import type { BuildingConfig } from "../../apply/config";
+import type { BuildingConfig, LockerApiItem } from "../../apply/config";
 
 interface FloorUsageProps {
   building: BuildingConfig;
-  generateStatus: (buildingId: string, floorNum: number, zoneName: string, index: number) => string;
+  allLockers: LockerApiItem[];
   selectedZone: { floorIdx: number; zoneIdx: number } | null;
   onSelectZone: (zone: { floorIdx: number; zoneIdx: number }) => void;
 }
 
-export default function FloorUsage({ building, generateStatus, selectedZone, onSelectZone }: FloorUsageProps) {
+export default function FloorUsage({ building, allLockers, selectedZone, onSelectZone }: FloorUsageProps) {
   return (
     <div className="flex-1 min-w-0 bg-white rounded-xl p-5 shadow-[0_1px_4px_rgba(0,0,0,0.04)]">
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-[15px] font-extrabold text-gray-900">{building.name} · 층별 사용 현황</h2>
-        {/* 그라데이션 범례 */}
         <div className="flex items-center gap-1.5">
           <span className="text-[10px] text-gray-400">여유</span>
           <div className="w-16 h-2 rounded-full bg-gradient-to-r from-green-400 via-yellow-400 to-red-500" />
@@ -20,37 +19,32 @@ export default function FloorUsage({ building, generateStatus, selectedZone, onS
         </div>
       </div>
 
-      <div className="flex flex-col gap-2.5">
+      <div className="flex flex-col gap-3">
         {building.floors.map((floor, floorIdx) => {
-          // 층별 구역 통계 계산
           const zoneStats = floor.zones.map((zone, zoneIdx) => {
-            const total = zone.rows * zone.cols;
-            let available = 0,
-              occupied = 0,
-              broken = 0;
-            for (let i = 0; i < total; i++) {
-              const s = generateStatus(building.id, floor.number, zone.name, i);
-              if (s === "available") available++;
-              else if (s === "occupied" || s === "mine") occupied++;
-              else if (s === "broken") broken++;
-            }
-            const percent = Math.round((occupied / total) * 100);
+            const zoneLockers = allLockers.filter(
+              (l) => l.building === building.name && l.floor === floor.number && l.locationDetail === zone.name,
+            );
+            const total = zoneLockers.length;
+            const available = zoneLockers.filter((l) => l.status === "NORMAL").length;
+            const occupied = zoneLockers.filter(
+              (l) => l.status === "ACTIVE" || l.status === "IN_USE" || l.status === "RESERVED",
+            ).length;
+            const broken = zoneLockers.filter((l) => l.status === "BROKEN").length;
+            const percent = total > 0 ? Math.round((occupied / total) * 100) : 0;
             return { zone, zoneIdx, total, available, occupied, broken, percent };
           });
 
           return (
             <div key={floor.number} className="flex gap-3 items-start">
-              {/* 층 라벨 */}
               <div className="w-8 pt-3 shrink-0 text-right">
                 <span className="text-[13px] font-bold text-gray-400">{floor.number}F</span>
               </div>
 
-              {/* 구역 카드들 */}
               <div className="flex-1 flex gap-3 flex-wrap">
                 {zoneStats.map((zs) => {
                   const isSelected = selectedZone?.floorIdx === floorIdx && selectedZone?.zoneIdx === zs.zoneIdx;
 
-                  // 바 색상
                   const barColor =
                     zs.percent >= 80 ? "bg-red-400" : zs.percent >= 60 ? "bg-orange-400" : "bg-green-400";
 
@@ -68,7 +62,6 @@ export default function FloorUsage({ building, generateStatus, selectedZone, onS
                         }
                       `}
                     >
-                      {/* 구역 이름 + 퍼센트 */}
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-[13px] font-bold text-gray-900">{zs.zone.name}</span>
                         <span
@@ -80,7 +73,6 @@ export default function FloorUsage({ building, generateStatus, selectedZone, onS
                         </span>
                       </div>
 
-                      {/* 프로그레스 바 */}
                       <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden mb-2">
                         <div
                           className={`h-full rounded-full transition-all duration-500 ${barColor}`}
@@ -88,7 +80,6 @@ export default function FloorUsage({ building, generateStatus, selectedZone, onS
                         />
                       </div>
 
-                      {/* 하단 통계 */}
                       <div className="flex items-center gap-2 text-[10px] text-gray-400">
                         <span className="flex items-center gap-1">
                           <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
@@ -99,7 +90,8 @@ export default function FloorUsage({ building, generateStatus, selectedZone, onS
                           {zs.occupied}
                         </span>
                         <span className="flex items-center gap-1">
-                          <span className="w-1.5 h-1.5 rounded-full bg-gray-300" />+{zs.broken}
+                          <span className="w-1.5 h-1.5 rounded-full bg-gray-300" />
+                          {zs.broken}
                         </span>
                       </div>
                     </button>

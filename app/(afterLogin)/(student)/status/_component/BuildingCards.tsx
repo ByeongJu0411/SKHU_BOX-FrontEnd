@@ -14,12 +14,9 @@ export default function BuildingCards({ buildings, stats, selectedIdx, onSelect 
         const s = stats[idx];
         const isSelected = selectedIdx === idx;
 
-        // SVG 원형 프로그레스 계산
         const radius = 28;
         const circumference = 2 * Math.PI * radius;
         const offset = circumference - (s.percent / 100) * circumference;
-
-        // 퍼센트에 따른 색상
         const progressColor = s.percent >= 80 ? "#ef5350" : s.percent >= 60 ? "#ff9800" : "#4a8c66";
 
         return (
@@ -36,7 +33,6 @@ export default function BuildingCards({ buildings, stats, selectedIdx, onSelect 
               }
             `}
           >
-            {/* 원형 프로그레스 */}
             <div className="relative w-[64px] h-[64px] shrink-0">
               <svg className="w-full h-full -rotate-90" viewBox="0 0 64 64">
                 <circle cx="32" cy="32" r={radius} fill="none" stroke="#f0f0f0" strokeWidth="5" />

@@ -1,31 +1,35 @@
 import type { ZoneStats } from "../page";
-import { generateLockerStatus } from "../page";
+import type { LockerApiItem } from "../../apply/config";
 
 interface ZoneDetailProps {
   zone: ZoneStats;
-  generateStatus: typeof generateLockerStatus;
+  allLockers: LockerApiItem[];
 }
 
-const statusLabel: Record<string, { text: string; color: string; dotColor: string }> = {
-  available: { text: "가능", color: "text-green-600", dotColor: "bg-green-500" },
-  occupied: { text: "사용중", color: "text-red-500", dotColor: "bg-red-500" },
-  broken: { text: "고장", color: "text-gray-400", dotColor: "bg-gray-300" },
-  mine: { text: "내 사물함", color: "text-blue-500", dotColor: "bg-blue-500" },
-};
+function mapStatusLabel(apiStatus: string): { text: string; color: string; dotColor: string } {
+  switch (apiStatus) {
+    case "NORMAL":
+      return { text: "가능", color: "text-green-600", dotColor: "bg-green-500" };
+    case "ACTIVE":
+    case "IN_USE":
+    case "RESERVED":
+      return { text: "사용중", color: "text-red-500", dotColor: "bg-red-500" };
+    case "BROKEN":
+      return { text: "고장", color: "text-gray-400", dotColor: "bg-gray-300" };
+    default:
+      return { text: "가능", color: "text-green-600", dotColor: "bg-green-500" };
+  }
+}
 
-export default function ZoneDetail({ zone }: ZoneDetailProps) {
-  // 도넛 차트 계산
+export default function ZoneDetail({ zone, allLockers }: ZoneDetailProps) {
   const radius = 36;
   const circumference = 2 * Math.PI * radius;
-  const occupiedPercent = ((zone.occupied + zone.mine) / zone.total) * 100;
+  const occupiedPercent = zone.total > 0 ? (zone.occupied / zone.total) * 100 : 0;
 
-  // 사물함 개별 목록 생성
-  const lockers = Array.from({ length: zone.total }, (_, i) => {
-    const num = String(i + 1).padStart(2, "0");
-    const id = `${zone.floorNumber}${zone.zoneName.charAt(0)}-${num}`;
-    const status = generateLockerStatus(zone.buildingId, zone.floorNumber, zone.zoneName, i);
-    return { id, status };
-  });
+  // 해당 구역의 사물함 목록
+  const zoneLockers = allLockers.filter(
+    (l) => l.building === zone.buildingName && l.floor === zone.floorNumber && l.locationDetail === zone.zoneName,
+  );
 
   return (
     <div
@@ -37,7 +41,6 @@ export default function ZoneDetail({ zone }: ZoneDetailProps) {
       max-[900px]:static max-[900px]:w-full max-[900px]:min-w-0
     "
     >
-      {/* 헤더 */}
       <div>
         <h3 className="text-[15px] font-extrabold text-gray-900">
           {zone.floorLabel} {zone.zoneName} 상세
@@ -49,11 +52,9 @@ export default function ZoneDetail({ zone }: ZoneDetailProps) {
 
       {/* 도넛 차트 + 통계 */}
       <div className="flex items-center gap-5">
-        {/* 도넛 */}
         <div className="relative w-[80px] h-[80px] shrink-0">
           <svg className="w-full h-full -rotate-90" viewBox="0 0 80 80">
             <circle cx="40" cy="40" r={radius} fill="none" stroke="#f0f0f0" strokeWidth="7" />
-            {/* 사용중 (빨강) */}
             <circle
               cx="40"
               cy="40"
@@ -72,7 +73,6 @@ export default function ZoneDetail({ zone }: ZoneDetailProps) {
           </span>
         </div>
 
-        {/* 통계 리스트 */}
         <div className="flex flex-col gap-1.5">
           <div className="flex items-center gap-2 text-[12px]">
             <span className="w-2.5 h-2.5 rounded-sm bg-green-500 shrink-0" />
@@ -82,7 +82,7 @@ export default function ZoneDetail({ zone }: ZoneDetailProps) {
           <div className="flex items-center gap-2 text-[12px]">
             <span className="w-2.5 h-2.5 rounded-sm bg-red-500 shrink-0" />
             <span className="text-gray-500 flex-1">사용중</span>
-            <span className="font-bold text-gray-900">{zone.occupied + zone.mine}</span>
+            <span className="font-bold text-gray-900">{zone.occupied}</span>
           </div>
           <div className="flex items-center gap-2 text-[12px]">
             <span className="w-2.5 h-2.5 rounded-sm bg-gray-300 shrink-0" />
@@ -95,22 +95,25 @@ export default function ZoneDetail({ zone }: ZoneDetailProps) {
       {/* 사물함 목록 */}
       <div>
         <h4 className="text-[13px] font-bold text-gray-900 mb-2">사물함 목록</h4>
-        <div className="flex flex-col max-h-[270px] overflow-y-auto">
-          {lockers.map((locker) => {
-            const cfg = statusLabel[locker.status] || statusLabel.available;
+        <div className="flex flex-col max-h-[300px] overflow-y-auto">
+          {zoneLockers.map((locker) => {
+            const label = mapStatusLabel(locker.status);
             return (
               <div
                 key={locker.id}
                 className="flex items-center justify-between py-2 border-b border-gray-50 last:border-b-0"
               >
                 <div className="flex items-center gap-2">
-                  <span className={`w-2 h-2 rounded-full shrink-0 ${cfg.dotColor}`} />
-                  <span className="text-[13px] font-semibold text-gray-900">{locker.id}</span>
+                  <span className={`w-2 h-2 rounded-full shrink-0 ${label.dotColor}`} />
+                  <span className="text-[13px] font-semibold text-gray-900">{locker.lockerNumber}</span>
                 </div>
-                <span className={`text-[11px] font-bold ${cfg.color}`}>{cfg.text}</span>
+                <span className={`text-[11px] font-bold ${label.color}`}>{label.text}</span>
               </div>
             );
           })}
+          {zoneLockers.length === 0 && (
+            <p className="text-[13px] text-gray-300 text-center py-4">사물함 데이터가 없습니다.</p>
+          )}
         </div>
       </div>
     </div>

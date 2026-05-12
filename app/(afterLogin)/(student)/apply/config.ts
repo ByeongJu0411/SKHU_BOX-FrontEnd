@@ -32,7 +32,7 @@ export interface LockerApiItem {
   floor: number;
   locationDetail: string;
   lockerNumber: string;
-  status: "NORMAL" | "BROKEN" | "IN_USE" | "RESERVED";
+  status: "NORMAL" | "BROKEN" | "ACTIVE" | "IN_USE" | "RESERVED";
 }
 
 // ===== 건물 설정 =====
