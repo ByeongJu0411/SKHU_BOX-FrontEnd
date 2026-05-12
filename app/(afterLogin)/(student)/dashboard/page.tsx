@@ -8,7 +8,9 @@ async function getDashboardData() {
   const cookieStore = await cookies();
   const token = cookieStore.get("accessToken")?.value;
 
-  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/dashboard/user`, {
+  if (!token) return null;
+
+  const res = await fetch(`${process.env.API_URL}/api/dashboard/user`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
