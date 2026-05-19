@@ -1,29 +1,38 @@
 "use client";
 
-import { useState } from "react";
-
-/*
- * ✅ 대기열 모드 컨트롤
- *
- * 학기 초: 대기열 모드 ON → 다중 서버 + 대기열 시스템 활성화
- *         → 학생에게 대기 순번 표시, 차례가 오면 일정 시간 내 예약 필요
- *
- * 학기 중: 대기열 모드 OFF → 단일 서버, 바로 신청 가능
- *
- * 백엔드 API:
- *   GET  /api/admin/settings/queue-mode → { enabled: boolean }
- *   PUT  /api/admin/settings/queue-mode → { enabled: boolean }
- */
+import { useState, useEffect } from "react";
+import { fetchWithAuth } from "@/app/lib/fetchWithAuth";
+import toast from "react-hot-toast";
+import QueueSkipModal from "./QueueSkipModal";
 
 export default function QueueModeControl() {
-  // TODO: 실제로는 API에서 초기 상태를 가져와야 함
   const [enabled, setEnabled] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isFetching, setIsFetching] = useState(true);
+  const [showSkipModal, setShowSkipModal] = useState(false);
 
+  // 페이지 로드 시 현재 대기열 모드 상태 조회
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const res = await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/queue-mode`);
+        const data = await res.json();
+        if (data.success) {
+          setEnabled(data.data.enabled);
+        }
+      } catch {
+        //
+      } finally {
+        setIsFetching(false);
+      }
+    };
+    load();
+  }, []);
+
+  // 대기열 모드 ON/OFF 전환
   const handleToggle = async () => {
     const next = !enabled;
 
-    // 위험 동작이므로 확인
     const message = next
       ? "대기열 모드를 활성화하시겠습니까?\n\n다중 서버가 가동되고, 학생들은 대기열을 통해 사물함을 신청하게 됩니다."
       : "대기열 모드를 비활성화하시겠습니까?\n\n단일 서버로 전환되고, 학생들은 바로 사물함을 신청할 수 있습니다.";
@@ -33,22 +42,27 @@ export default function QueueModeControl() {
     setIsLoading(true);
 
     try {
-      // TODO: 실제 API 호출
-      // await fetch("/api/admin/settings/queue-mode", {
-      //   method: "PUT",
-      //   headers: { "Content-Type": "application/json" },
-      //   body: JSON.stringify({ enabled: next }),
-      // });
+      const res = await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/queue-mode`, {
+        method: "PATCH",
+        body: JSON.stringify({ enabled: next }),
+      });
 
-      // MVP: 0.5초 딜레이로 API 호출 시뮬레이션
-      await new Promise((r) => setTimeout(r, 500));
-      setEnabled(next);
+      const data = await res.json();
+
+      if (data.success) {
+        setEnabled(data.data.enabled);
+        toast.success(data.data.enabled ? "대기열 모드가 활성화되었습니다" : "대기열 모드가 비활성화되었습니다");
+      } else {
+        toast.error(data.message || "설정 변경에 실패했습니다");
+      }
     } catch {
-      alert("설정 변경에 실패했습니다. 다시 시도해 주세요.");
+      toast.error("서버 연결에 실패했습니다");
     } finally {
       setIsLoading(false);
     }
   };
+
+  if (isFetching) return null;
 
   return (
     <div
@@ -61,7 +75,6 @@ export default function QueueModeControl() {
     >
       {/* 좌측: 상태 정보 */}
       <div className="flex items-center gap-3.5">
-        {/* 상태 아이콘 */}
         <div
           className={`
           w-9 h-9 rounded-xl flex items-center justify-center shrink-0
@@ -104,33 +117,47 @@ export default function QueueModeControl() {
         </div>
       </div>
 
-      {/* 우측: 토글 스위치 */}
-      <button
-        onClick={handleToggle}
-        disabled={isLoading}
-        className={`
-          relative w-[52px] h-[28px] rounded-full border-none
-          cursor-pointer transition-colors duration-300
-          disabled:opacity-50 disabled:cursor-not-allowed
-          ${enabled ? "bg-[#ffa726]" : "bg-[#e0e0e0]"}
-        `}
-      >
-        <span
+      {/* 우측: 스킵 버튼 + 토글 스위치 */}
+      <div className="flex items-center gap-3">
+        {/* 대기열 ON일 때만 스킵 버튼 표시 */}
+        {enabled && (
+          <button
+            onClick={() => setShowSkipModal(true)}
+            className="text-[12px] font-semibold text-[#e67700] bg-[#ffd43b]/20 border border-[#ffd43b]/40 px-3 py-1.5 rounded-lg cursor-pointer font-sans hover:bg-[#ffd43b]/30 transition-colors whitespace-nowrap"
+          >
+            대기열 스킵
+          </button>
+        )}
+
+        <button
+          onClick={handleToggle}
+          disabled={isLoading}
           className={`
-          absolute top-[3px] w-[22px] h-[22px] rounded-full bg-white
-          shadow-[0_1px_3px_rgba(0,0,0,0.15)]
-          transition-all duration-300
-          ${enabled ? "left-[27px]" : "left-[3px]"}
-        `}
+            relative w-[52px] h-[28px] rounded-full border-none
+            cursor-pointer transition-colors duration-300
+            disabled:opacity-50 disabled:cursor-not-allowed
+            ${enabled ? "bg-[#ffa726]" : "bg-[#e0e0e0]"}
+          `}
         >
-          {/* 로딩 시 스피너 */}
-          {isLoading && (
-            <span className="absolute inset-0 flex items-center justify-center">
-              <span className="w-3 h-3 border-2 border-[#b0b8c1] border-t-transparent rounded-full animate-spin" />
-            </span>
-          )}
-        </span>
-      </button>
+          <span
+            className={`
+            absolute top-[3px] w-[22px] h-[22px] rounded-full bg-white
+            shadow-[0_1px_3px_rgba(0,0,0,0.15)]
+            transition-all duration-300
+            ${enabled ? "left-[27px]" : "left-[3px]"}
+          `}
+          >
+            {isLoading && (
+              <span className="absolute inset-0 flex items-center justify-center">
+                <span className="w-3 h-3 border-2 border-[#b0b8c1] border-t-transparent rounded-full animate-spin" />
+              </span>
+            )}
+          </span>
+        </button>
+      </div>
+
+      {/* 스킵 모달 */}
+      <QueueSkipModal isOpen={showSkipModal} onClose={() => setShowSkipModal(false)} />
     </div>
   );
 }
