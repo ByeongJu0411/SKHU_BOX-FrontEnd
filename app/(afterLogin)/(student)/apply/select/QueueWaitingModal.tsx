@@ -12,15 +12,15 @@ interface QueueWaitingModalProps {
 export default function QueueWaitingModal({ isOpen, rank, onClose }: QueueWaitingModalProps) {
   // 500 이하로 떨어지면 자동 닫힘 (부모에서 처리하지만 안전장치)
   useEffect(() => {
-    if (isOpen && rank <= 500) {
+    if (isOpen && rank <= 1) {
       onClose();
     }
   }, [isOpen, rank, onClose]);
 
-  if (!isOpen || rank <= 500) return null;
+  if (!isOpen || rank <= 1) return null;
 
   // 대기 순번 (501번째 = 대기 1번)
-  const waitingNumber = rank - 500;
+  const waitingNumber = rank - 1;
 
   return (
     <div className="fixed inset-0 z-[200] flex items-center justify-center bg-white">
