@@ -1,18 +1,21 @@
+export interface ComplaintApiItem {
+  id: number;
+  studentNumber: string;
+  lockerNumber: string;
+  content: string;
+  answer: string | null;
+  status: string;
+  createdAt: string;
+}
+
 export type ComplaintStatus = "대기중" | "확인중" | "처리중" | "완료";
 
 export interface ComplaintItem {
-  id: string;
-  title: string;
-  description: string;
-  category: string;
-  userName: string;
-  userDept: string;
-  userStudentId: string;
-  lockerId: string;
-  building: string;
-  location: string;
-  createdAt: string;
-  timeAgo: string;
-  status: ComplaintStatus;
+  id: number;
+  studentNumber: string;
+  lockerNumber: string;
   content: string;
+  answer: string | null;
+  status: ComplaintStatus;
+  createdAt: string;
 }

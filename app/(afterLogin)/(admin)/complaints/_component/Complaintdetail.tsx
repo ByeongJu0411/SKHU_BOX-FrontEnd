@@ -5,7 +5,7 @@ import type { ComplaintItem, ComplaintStatus } from "../type";
 
 interface ComplaintDetailProps {
   complaint: ComplaintItem;
-  onStatusChange: (id: string, status: ComplaintStatus) => void;
+  onStatusChange: (id: number, status: ComplaintStatus, answer: string) => void;
 }
 
 const statusBadge: Record<ComplaintStatus, { style: string; label: string }> = {
@@ -23,13 +23,12 @@ const selectArrow = {
 } as const;
 
 export default function ComplaintDetail({ complaint, onStatusChange }: ComplaintDetailProps) {
-  const [reply, setReply] = useState("");
+  const [reply, setReply] = useState(complaint.answer || "");
   const [status, setStatus] = useState<ComplaintStatus>(complaint.status);
   const badge = statusBadge[complaint.status];
 
   const handleSubmit = () => {
-    onStatusChange(complaint.id, status);
-    setReply("");
+    onStatusChange(complaint.id, status, reply);
   };
 
   return (
@@ -37,41 +36,22 @@ export default function ComplaintDetail({ complaint, onStatusChange }: Complaint
       {/* 헤더 */}
       <div className="px-6 py-5 border-b border-gray-50">
         <div className="flex items-start justify-between mb-1">
-          <h2 className="text-lg font-extrabold text-gray-900">{complaint.title}</h2>
+          <h2 className="text-lg font-extrabold text-gray-900">민원 #{complaint.id}</h2>
           <span className={`text-[11px] font-bold px-2.5 py-1 rounded-lg shrink-0 ${badge.style}`}>{badge.label}</span>
         </div>
-        <p className="text-[12px] text-gray-400">
-          #{complaint.id} · 수리 요청 · {complaint.createdAt}
-        </p>
+        <p className="text-[12px] text-gray-400">{complaint.createdAt}</p>
       </div>
 
-      {/* 사물함 정보 */}
+      {/* 정보 */}
       <div className="px-6 py-4 border-b border-gray-50">
-        <div className="grid grid-cols-3 gap-4">
-          {[
-            { label: "사물함", value: complaint.lockerId },
-            { label: "위치", value: `${complaint.building} ${complaint.location}` },
-            { label: "접수일", value: complaint.createdAt },
-          ].map((info) => (
-            <div key={info.label} className="flex flex-col gap-0.5">
-              <span className="text-[11px] text-gray-400">{info.label}</span>
-              <span className="text-[13px] font-semibold text-gray-900">{info.value}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* 요청자 정보 */}
-      <div className="px-6 py-4 border-b border-gray-50">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-full bg-green-50 text-brand text-sm font-bold flex items-center justify-center shrink-0">
-            {complaint.userName.charAt(0)}
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <span className="block text-[11px] text-gray-400 mb-0.5">학번</span>
+            <span className="block text-[13px] font-semibold text-gray-900">{complaint.studentNumber}</span>
           </div>
-          <div className="flex flex-col gap-0.5">
-            <span className="text-[13px] font-bold text-gray-900">{complaint.userName}</span>
-            <span className="text-[11px] text-gray-400">
-              {complaint.userDept} · {complaint.userStudentId}
-            </span>
+          <div>
+            <span className="block text-[11px] text-gray-400 mb-0.5">사물함</span>
+            <span className="block text-[13px] font-semibold text-gray-900">{complaint.lockerNumber || "-"}</span>
           </div>
         </div>
       </div>
@@ -82,6 +62,16 @@ export default function ComplaintDetail({ complaint, onStatusChange }: Complaint
         <p className="text-[13px] text-gray-600 leading-relaxed">{complaint.content}</p>
       </div>
 
+      {/* 기존 답변 (있을 경우) */}
+      {complaint.answer && (
+        <div className="px-6 py-4 border-b border-gray-50">
+          <h4 className="text-[13px] font-bold text-gray-900 mb-2">💬 기존 답변</h4>
+          <div className="bg-green-50 rounded-xl p-3 border border-green-100">
+            <p className="text-[13px] text-gray-600 leading-relaxed">{complaint.answer}</p>
+          </div>
+        </div>
+      )}
+
       {/* 답변 작성 */}
       <div className="px-6 py-4 border-b border-gray-50">
         <h4 className="text-[13px] font-bold text-gray-900 mb-2">답변 작성</h4>
@@ -89,28 +79,18 @@ export default function ComplaintDetail({ complaint, onStatusChange }: Complaint
           value={reply}
           onChange={(e) => setReply(e.target.value)}
           placeholder="학생에게 전달할 답변을 작성하세요. 처리 상황이나 안내 사항을 포함해 주세요."
-          className="
-            w-full h-24 p-3 border border-gray-200 rounded-xl
-            text-[13px] text-gray-900 bg-white outline-none font-sans
-            focus:border-brand transition-colors
-            placeholder:text-gray-300 resize-none
-          "
+          className="w-full h-24 p-3 border border-gray-200 rounded-xl text-[13px] text-gray-900 bg-white outline-none font-sans focus:border-brand transition-colors placeholder:text-gray-300 resize-none"
         />
       </div>
 
-      {/* 하단: 상태 변경 + 액션 */}
+      {/* 하단: 상태 변경 + 전송 */}
       <div className="px-6 py-4 flex items-center justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-2">
           <span className="text-[13px] font-semibold text-gray-500">상태 변경:</span>
           <select
             value={status}
             onChange={(e) => setStatus(e.target.value as ComplaintStatus)}
-            className="
-              h-[34px] px-3 pr-8 border border-gray-200 rounded-lg
-              text-xs font-semibold text-gray-900 bg-white
-              appearance-none outline-none font-sans
-              focus:border-brand transition-colors cursor-pointer
-            "
+            className="h-[34px] px-3 pr-8 border border-gray-200 rounded-lg text-xs font-semibold text-gray-900 bg-white appearance-none outline-none font-sans focus:border-brand transition-colors cursor-pointer"
             style={selectArrow}
           >
             <option value="대기중">대기중</option>
@@ -120,29 +100,12 @@ export default function ComplaintDetail({ complaint, onStatusChange }: Complaint
           </select>
         </div>
 
-        <div className="flex items-center gap-2">
-          <button
-            className="
-            text-[13px] font-semibold text-gray-500
-            px-4 py-2 border border-gray-200 rounded-lg
-            bg-white cursor-pointer font-sans
-            hover:bg-gray-50 transition-colors
-          "
-          >
-            🗑 삭제
-          </button>
-          <button
-            onClick={handleSubmit}
-            className="
-              text-[13px] font-bold text-white
-              px-5 py-2 border-none rounded-lg
-              bg-brand cursor-pointer font-sans
-              hover:bg-brand-dark transition-colors
-            "
-          >
-            ▶ 답변 전송
-          </button>
-        </div>
+        <button
+          onClick={handleSubmit}
+          className="text-[13px] font-bold text-white px-5 py-2 border-none rounded-lg bg-brand cursor-pointer font-sans hover:bg-brand-dark transition-colors"
+        >
+          ▶ 답변 전송
+        </button>
       </div>
     </div>
   );

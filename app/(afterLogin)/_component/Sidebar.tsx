@@ -162,7 +162,6 @@ const adminMenus: MenuGroup[] = [
       {
         label: "민원 관리",
         href: "/complaints",
-        badge: 3,
         icon: (
           <svg
             viewBox="0 0 24 24"
