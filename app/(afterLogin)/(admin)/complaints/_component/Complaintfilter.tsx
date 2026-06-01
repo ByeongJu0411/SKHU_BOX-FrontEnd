@@ -10,7 +10,6 @@ interface ComplaintFilterProps {
 
 const tabs: { label: ComplaintStatus | "전체"; colorClass: string }[] = [
   { label: "전체", colorClass: "bg-gray-900 text-white" },
-  { label: "대기중", colorClass: "bg-red-500 text-white" },
   { label: "확인중", colorClass: "bg-yellow-500 text-white" },
   { label: "처리중", colorClass: "bg-blue-500 text-white" },
   { label: "완료", colorClass: "bg-green-600 text-white" },

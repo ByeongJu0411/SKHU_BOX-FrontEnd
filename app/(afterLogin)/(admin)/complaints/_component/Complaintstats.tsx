@@ -4,7 +4,6 @@ interface ComplaintStatsProps {
 
 export default function ComplaintStats({ counts }: ComplaintStatsProps) {
   const stats = [
-    { icon: "⚠", iconBg: "bg-red-50 text-red-500", value: counts["대기중"] || 0, label: "대기중" },
     { icon: "🔍", iconBg: "bg-yellow-50 text-yellow-600", value: counts["확인중"] || 0, label: "확인중" },
     { icon: "🔧", iconBg: "bg-orange-50 text-orange-500", value: counts["처리중"] || 0, label: "처리중" },
     { icon: "✓", iconBg: "bg-green-50 text-green-600", value: counts["완료"] || 0, label: "완료" },

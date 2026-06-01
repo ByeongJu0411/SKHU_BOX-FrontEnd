@@ -7,7 +7,6 @@ interface ComplaintListProps {
 }
 
 const statusBadge: Record<ComplaintStatus, { style: string; label: string }> = {
-  대기중: { style: "bg-red-500 text-white", label: "대기" },
   확인중: { style: "bg-yellow-500 text-white", label: "확인중" },
   처리중: { style: "bg-blue-500 text-white", label: "처리중" },
   완료: { style: "bg-green-600 text-white", label: "완료" },

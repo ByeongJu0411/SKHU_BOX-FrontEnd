@@ -97,7 +97,7 @@ export default function LockerSelectPage() {
           setMyRank(rank);
 
           // 500번 초과면 대기열 모달 표시
-          if (rank > 500) {
+          if (rank > 1) {
             setShowQueueModal(true);
           } else {
             setShowQueueModal(false);
@@ -132,7 +132,7 @@ export default function LockerSelectPage() {
           setMyRank(rank);
 
           // 500 이하로 떨어지면 모달 닫기 + 사물함 새로고침
-          if (rank <= 500) {
+          if (rank <= 1) {
             setShowQueueModal(false);
             toast.success("대기가 완료되었습니다! 사물함을 선택해 주세요.");
             await loadLockers();
