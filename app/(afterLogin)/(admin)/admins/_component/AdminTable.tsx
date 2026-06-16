@@ -2,11 +2,9 @@ import type { AdminItem } from "../type";
 
 interface AdminTableProps {
   admins: AdminItem[];
-  onToggleActive: (id: string) => void;
-  onDelete: (id: string) => void;
 }
 
-export default function AdminTable({ admins, onToggleActive, onDelete }: AdminTableProps) {
+export default function AdminTable({ admins }: AdminTableProps) {
   return (
     <div className="bg-white rounded-2xl overflow-x-auto shadow-[0_1px_4px_rgba(0,0,0,0.04)]">
       <table className="w-full border-collapse text-[13px]">
@@ -16,8 +14,6 @@ export default function AdminTable({ admins, onToggleActive, onDelete }: AdminTa
             <th className="py-3.5 px-5 text-left text-xs font-semibold text-gray-400 whitespace-nowrap">학번</th>
             <th className="py-3.5 px-5 text-left text-xs font-semibold text-gray-400 whitespace-nowrap">학부</th>
             <th className="py-3.5 px-5 text-left text-xs font-semibold text-gray-400 whitespace-nowrap">등록일</th>
-            <th className="py-3.5 px-5 text-left text-xs font-semibold text-gray-400 whitespace-nowrap">상태</th>
-            <th className="py-3.5 px-5 text-left text-xs font-semibold text-gray-400 whitespace-nowrap">관리</th>
           </tr>
         </thead>
         <tbody>
@@ -31,7 +27,7 @@ export default function AdminTable({ admins, onToggleActive, onDelete }: AdminTa
                   </div>
                   <div>
                     <span className="block text-[13px] font-bold text-gray-900">{admin.name}</span>
-                    <span className="block text-[11px] text-gray-300">{admin.email}@office.skhu.ac.kr</span>
+                    <span className="block text-[11px] text-gray-300">{admin.email}</span>
                   </div>
                 </div>
               </td>
@@ -44,34 +40,6 @@ export default function AdminTable({ admins, onToggleActive, onDelete }: AdminTa
 
               {/* 등록일 */}
               <td className="py-4 px-5 text-[13px] text-gray-500 whitespace-nowrap">{admin.joinDate}</td>
-
-              {/* 상태 토글 */}
-              <td className="py-4 px-5">
-                <button
-                  onClick={() => onToggleActive(admin.id)}
-                  className={`
-                    relative w-10 h-[22px] rounded-full border-none cursor-pointer transition-colors duration-200
-                    ${admin.isActive ? "bg-brand" : "bg-gray-300"}
-                  `}
-                >
-                  <span
-                    className={`
-                    absolute top-[2px] w-[18px] h-[18px] rounded-full bg-white shadow-sm transition-all duration-200
-                    ${admin.isActive ? "left-[20px]" : "left-[2px]"}
-                  `}
-                  />
-                </button>
-              </td>
-
-              {/* 관리 */}
-              <td className="py-4 px-5 whitespace-nowrap">
-                <button
-                  onClick={() => onDelete(admin.id)}
-                  className="text-xs font-semibold text-red-500 bg-transparent border border-red-500 rounded-lg px-3 py-1.5 cursor-pointer font-sans hover:bg-red-50 transition-colors"
-                >
-                  삭제
-                </button>
-              </td>
             </tr>
           ))}
         </tbody>

@@ -111,9 +111,57 @@
   },
   "hotPaths": [
     {
+      "path": "app\\(afterLogin)\\(admin)\\admins\\page.tsx",
+      "accessCount": 12,
+      "lastAccessed": 1781581898578,
+      "type": "file"
+    },
+    {
+      "path": "app\\(afterLogin)\\(admin)\\admins\\_component\\AdminTable.tsx",
+      "accessCount": 4,
+      "lastAccessed": 1781581874413,
+      "type": "file"
+    },
+    {
       "path": "app\\(afterLogin)\\(admin)\\students\\_component\\StudentDetail.tsx",
       "accessCount": 2,
       "lastAccessed": 1781579144866,
+      "type": "file"
+    },
+    {
+      "path": "app\\(afterLogin)\\(admin)\\admins\\type.ts",
+      "accessCount": 2,
+      "lastAccessed": 1781580212499,
+      "type": "file"
+    },
+    {
+      "path": "app\\(afterLogin)\\(admin)\\complaints\\page.tsx",
+      "accessCount": 2,
+      "lastAccessed": 1781581332377,
+      "type": "file"
+    },
+    {
+      "path": "app\\(afterLogin)\\(admin)\\admins\\_component\\AdminRegisterModal.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1781580089577,
+      "type": "file"
+    },
+    {
+      "path": "app\\(afterLogin)\\(admin)\\students\\type.ts",
+      "accessCount": 1,
+      "lastAccessed": 1781580094688,
+      "type": "file"
+    },
+    {
+      "path": "app\\lib\\fetchWithAuth.ts",
+      "accessCount": 1,
+      "lastAccessed": 1781580181747,
+      "type": "file"
+    },
+    {
+      "path": "app\\(afterLogin)\\(admin)\\students\\page.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1781580194929,
       "type": "file"
     }
   ],
