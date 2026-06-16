@@ -1,55 +1,39 @@
 "use client";
 
-import { useState } from "react";
-import type { AdminItem } from "./type";
+import { useState, useEffect } from "react";
+import { fetchWithAuth } from "@/app/lib/fetchWithAuth";
+import type { AdminItem, AdminApiItem } from "./type";
+import { toAdminItem } from "./type";
 import AdminTable from "./_component/AdminTable";
 import AdminRegisterModal from "./_component/AdminRegisterModal";
 
-const MOCK_ADMINS: AdminItem[] = [
-  {
-    id: "1",
-    name: "김민수",
-    studentId: "20210001",
-    dept: "IT융합자율학부",
-    email: "20210001",
-    joinDate: "2025.09.01",
-    isActive: true,
-  },
-  {
-    id: "2",
-    name: "이수진",
-    studentId: "20220234",
-    dept: "사회융합자율학부",
-    email: "20220234",
-    joinDate: "2026.03.01",
-    isActive: true,
-  },
-  {
-    id: "3",
-    name: "박준혁",
-    studentId: "20230456",
-    dept: "IT융합자율학부",
-    email: "20230456",
-    joinDate: "2026.03.01",
-    isActive: true,
-  },
-  {
-    id: "4",
-    name: "최예린",
-    studentId: "20210789",
-    dept: "사회융합자율학부",
-    email: "20210789",
-    joinDate: "2025.09.01",
-    isActive: false,
-  },
-];
-
 export default function AdminManagementPage() {
-  const [admins, setAdmins] = useState(MOCK_ADMINS);
+  const [admins, setAdmins] = useState<AdminItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const activeCount = admins.filter((a) => a.isActive).length;
   const inactiveCount = admins.filter((a) => !a.isActive).length;
+
+  useEffect(() => {
+    const loadAdmins = async () => {
+      setIsLoading(true);
+      try {
+        const res = await fetchWithAuth(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/users/admins`);
+        const data = await res.json();
+
+        if (data.success) {
+          setAdmins((data.data as AdminApiItem[]).map(toAdminItem));
+        }
+      } catch {
+        //
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadAdmins();
+  }, []);
 
   const handleRegister = (data: { name: string; studentId: string; dept: string; email: string }) => {
     const newAdmin: AdminItem = {
@@ -64,14 +48,19 @@ export default function AdminManagementPage() {
     setAdmins((prev) => [...prev, newAdmin]);
   };
 
-  const handleToggleActive = (id: string) => {
-    setAdmins((prev) => prev.map((a) => (a.id === id ? { ...a, isActive: !a.isActive } : a)));
-  };
-
-  const handleDelete = (id: string) => {
-    if (!confirm("정말 이 관리자를 삭제하시겠습니까?")) return;
-    setAdmins((prev) => prev.filter((a) => a.id !== id));
-  };
+  if (isLoading && admins.length === 0) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="flex flex-col items-center gap-4">
+          <div className="relative w-10 h-10">
+            <div className="absolute inset-0 rounded-full border-[3px] border-[#e8ebed]" />
+            <div className="absolute inset-0 rounded-full border-[3px] border-transparent border-t-[#191f28] animate-spin" />
+          </div>
+          <span className="text-[14px] font-medium text-[#4e5968]">관리자 목록을 불러오는 중...</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-5 w-full">
@@ -123,7 +112,7 @@ export default function AdminManagementPage() {
       </div>
 
       {/* 테이블 */}
-      <AdminTable admins={admins} onToggleActive={handleToggleActive} onDelete={handleDelete} />
+      <AdminTable admins={admins} />
 
       {/* 등록 모달 */}
       <AdminRegisterModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onRegister={handleRegister} />
