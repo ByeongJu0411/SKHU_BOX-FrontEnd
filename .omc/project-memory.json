@@ -1,7 +1,7 @@
 {
   "version": "1.0.0",
-  "lastScanned": 1775445876706,
-  "projectRoot": "c:\\Projects\\SKHU_BOX-FrontEnd",
+  "lastScanned": 1781578920220,
+  "projectRoot": "C:\\Projects\\SKHU_BOX-FrontEnd",
   "techStack": {
     "languages": [
       {
@@ -63,7 +63,8 @@
     "isMonorepo": false,
     "workspaces": [],
     "mainDirectories": [
-      "app"
+      "app",
+      "public"
     ],
     "gitBranches": {
       "defaultBranch": "main",
@@ -76,30 +77,43 @@
       "path": "app",
       "purpose": "Application code",
       "fileCount": 2,
-      "lastAccessed": 1775445876143,
+      "lastAccessed": 1781578919796,
       "keyFiles": [
         "globals.css",
         "layout.tsx"
+      ]
+    },
+    "public": {
+      "path": "public",
+      "purpose": "Public files",
+      "fileCount": 1,
+      "lastAccessed": 1781578919884,
+      "keyFiles": [
+        "reserveCharacter.png"
+      ]
+    },
+    "app\\api": {
+      "path": "app\\api",
+      "purpose": "API routes",
+      "fileCount": 0,
+      "lastAccessed": 1781578919888,
+      "keyFiles": []
+    },
+    "app\\lib": {
+      "path": "app\\lib",
+      "purpose": "Library code",
+      "fileCount": 1,
+      "lastAccessed": 1781578919890,
+      "keyFiles": [
+        "fetchWithAuth.ts"
       ]
     }
   },
   "hotPaths": [
     {
-      "path": "package.json",
+      "path": "app\\(afterLogin)\\(admin)\\students\\_component\\StudentDetail.tsx",
       "accessCount": 2,
-      "lastAccessed": 1775447104827,
-      "type": "file"
-    },
-    {
-      "path": "postcss.config.mjs",
-      "accessCount": 1,
-      "lastAccessed": 1775446815713,
-      "type": "file"
-    },
-    {
-      "path": "app\\globals.css",
-      "accessCount": 1,
-      "lastAccessed": 1775446816621,
+      "lastAccessed": 1781579144866,
       "type": "file"
     }
   ],

@@ -1,71 +1,61 @@
 "use client";
 
-type TabType = "전체" | "만료임박";
+import { useState } from "react";
 
-interface StudentFilterProps {
-  activeTab: TabType;
-  onTabChange: (tab: TabType) => void;
-  counts: Record<string, number>;
+interface StudentSearchProps {
+  onSearch: (query: { name: string; studentNumber: string }) => void;
 }
 
-const selectArrow = {
-  backgroundImage:
-    "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E\")",
-  backgroundRepeat: "no-repeat",
-  backgroundPosition: "right 10px center",
-} as const;
+export default function StudentSearch({ onSearch }: StudentSearchProps) {
+  const [name, setName] = useState("");
+  const [studentNumber, setStudentNumber] = useState("");
 
-export default function StudentFilter({ activeTab, onTabChange, counts }: StudentFilterProps) {
-  const tabs: { label: TabType }[] = [{ label: "전체" }, { label: "만료임박" }];
+  const handleSearch = () => {
+    onSearch({ name: name.trim(), studentNumber: studentNumber.trim() });
+  };
+
+  const handleReset = () => {
+    setName("");
+    setStudentNumber("");
+    onSearch({ name: "", studentNumber: "" });
+  };
 
   return (
-    <div className="flex items-center justify-between gap-4 flex-wrap">
-      <div className="flex items-center gap-2 flex-wrap">
-        {/* 탭 */}
-        {tabs.map((tab) => {
-          const isActive = activeTab === tab.label;
-          const count = counts[tab.label] || 0;
-          return (
-            <button
-              key={tab.label}
-              onClick={() => onTabChange(tab.label)}
-              className={`
-                flex items-center gap-1.5 text-xs font-semibold
-                px-3 py-1.5 rounded-lg border-none cursor-pointer font-sans transition-colors
-                ${isActive ? "bg-gray-900 text-white" : "bg-gray-100 text-gray-400"}
-              `}
-            >
-              {tab.label}
-              <span
-                className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] text-center
-                ${isActive ? "bg-white/25" : "bg-gray-200 text-gray-500"}`}
-              >
-                {count}
-              </span>
-            </button>
-          );
-        })}
-
-        {/* 학년 드롭다운 */}
-        <select
-          className="h-[34px] px-3 pr-8 border border-gray-200 rounded-lg text-xs font-semibold text-gray-900 bg-white appearance-none outline-none font-sans focus:border-brand transition-colors cursor-pointer ml-2"
-          style={selectArrow}
-        >
-          <option>전체 학년</option>
-          <option>1학년</option>
-          <option>2학년</option>
-          <option>3학년</option>
-          <option>4학년</option>
-        </select>
-
-        {/* 검색 */}
-        <div className="relative ml-1">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs">🔍</span>
+    <div className="bg-white rounded-2xl p-5 shadow-[0_1px_4px_rgba(0,0,0,0.04)]">
+      <div className="flex items-end gap-3 flex-wrap">
+        <div className="flex-1 min-w-[160px]">
+          <label className="block text-[12px] font-semibold text-gray-500 mb-1.5">이름</label>
           <input
-            type="text"
-            placeholder="이름, 학번, 이메일로 검색"
-            className="h-[34px] w-[220px] pl-8 pr-3 border border-gray-200 rounded-lg text-xs text-gray-900 bg-white outline-none font-sans focus:border-brand transition-colors placeholder:text-gray-300 max-md:w-full"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+            placeholder="이름으로 검색"
+            className="w-full h-[38px] px-3 border border-gray-200 rounded-lg text-[13px] text-gray-900 bg-white outline-none font-sans focus:border-brand transition-colors placeholder:text-gray-300"
           />
+        </div>
+        <div className="flex-1 min-w-[160px]">
+          <label className="block text-[12px] font-semibold text-gray-500 mb-1.5">학번</label>
+          <input
+            value={studentNumber}
+            onChange={(e) => setStudentNumber(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+            placeholder="학번으로 검색"
+            className="w-full h-[38px] px-3 border border-gray-200 rounded-lg text-[13px] text-gray-900 bg-white outline-none font-sans focus:border-brand transition-colors placeholder:text-gray-300"
+          />
+        </div>
+        <div className="flex gap-2">
+          <button
+            onClick={handleSearch}
+            className="h-[38px] px-4 bg-brand text-white text-[13px] font-bold border-none rounded-lg cursor-pointer font-sans hover:bg-brand-dark transition-colors"
+          >
+            검색
+          </button>
+          <button
+            onClick={handleReset}
+            className="h-[38px] px-4 bg-white text-gray-500 text-[13px] font-semibold border border-gray-200 rounded-lg cursor-pointer font-sans hover:bg-gray-50 transition-colors"
+          >
+            초기화
+          </button>
         </div>
       </div>
     </div>
