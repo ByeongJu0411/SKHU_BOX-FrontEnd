@@ -37,6 +37,8 @@ function mapApiStatus(apiStatus: string): LockerStatus {
       return "occupied";
     case "BROKEN":
       return "broken";
+    case "DISABLED":
+      return "broken";
     default:
       return "available";
   }

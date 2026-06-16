@@ -1,7 +1,11 @@
 "use client";
 
+import { useState } from "react";
+import { buildings } from "@/app/(afterLogin)/(student)/apply/config";
+
 interface LockerFilterProps {
-  stats: { available: number; inUse: number; broken: number };
+  stats: { available: number; inUse: number; broken: number; disabled: number };
+  onFilterChange: (filter: { building: string; floor: string; search: string }) => void;
 }
 
 const selectArrow = {
@@ -18,25 +22,53 @@ const selectClass = `
   focus:border-brand transition-colors cursor-pointer
 `;
 
-export default function LockerFilter({ stats }: LockerFilterProps) {
+// 건물을 선택하지 않았을 때는 전체 건물의 층 번호를 모아서 보여준다
+const allFloorNumbers = Array.from(new Set(buildings.flatMap((b) => b.floors.map((f) => f.number)))).sort(
+  (a, b) => a - b
+);
+
+export default function LockerFilter({ stats, onFilterChange }: LockerFilterProps) {
+  const [building, setBuilding] = useState("");
+  const [floor, setFloor] = useState("");
+  const [search, setSearch] = useState("");
+
+  const floorOptions = building
+    ? buildings.find((b) => b.name === building)?.floors.map((f) => f.number) ?? []
+    : allFloorNumbers;
+
+  const handleBuildingChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const nextBuilding = e.target.value;
+    setBuilding(nextBuilding);
+    setFloor("");
+    onFilterChange({ building: nextBuilding, floor: "", search });
+  };
+
+  const handleFloorChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setFloor(e.target.value);
+    onFilterChange({ building, floor: e.target.value, search });
+  };
+
+  const handleSearch = () => onFilterChange({ building, floor, search });
+
   return (
     <div className="flex items-center justify-between gap-4 flex-wrap">
       {/* 필터 드롭다운 + 검색 */}
       <div className="flex gap-2 items-center flex-wrap">
-        <select className={selectClass} style={selectArrow}>
-          <option>새천년관</option>
-          <option>정보과학관</option>
+        <select className={selectClass} style={selectArrow} value={building} onChange={handleBuildingChange}>
+          <option value="">전체 건물</option>
+          {buildings.map((b) => (
+            <option key={b.id} value={b.name}>
+              {b.name}
+            </option>
+          ))}
         </select>
-        <select className={selectClass} style={selectArrow}>
-          <option>3층</option>
-          <option>2층</option>
-          <option>1층</option>
-        </select>
-        <select className={selectClass} style={selectArrow}>
-          <option>전체 상태</option>
-          <option>사용 가능</option>
-          <option>사용중</option>
-          <option>고장</option>
+        <select className={selectClass} style={selectArrow} value={floor} onChange={handleFloorChange}>
+          <option value="">전체 층</option>
+          {floorOptions.map((f) => (
+            <option key={f} value={f}>
+              {f}층
+            </option>
+          ))}
         </select>
 
         {/* 검색 — relative로 아이콘 겹치기 */}
@@ -44,6 +76,9 @@ export default function LockerFilter({ stats }: LockerFilterProps) {
           <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[13px]">🔍</span>
           <input
             type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleSearch()}
             placeholder="사물함 번호 또는 학생 이름을 검색..."
             className="
               h-[38px] w-[260px] pl-9 pr-3
@@ -56,16 +91,24 @@ export default function LockerFilter({ stats }: LockerFilterProps) {
             "
           />
         </div>
+        <button
+          onClick={handleSearch}
+          className="h-[38px] px-4 bg-brand text-white text-[13px] font-bold border-none rounded-[10px] cursor-pointer font-sans hover:bg-brand-dark transition-colors"
+        >
+          검색
+        </button>
       </div>
 
       {/* 통계 도트 */}
-      <div className="flex items-center gap-1.5">
+      <div className="flex items-center gap-1.5 flex-wrap">
         <span className="w-2 h-2 rounded-full bg-brand" />
         <span className="text-xs font-semibold text-gray-500 mr-2">가능 {stats.available}</span>
         <span className="w-2 h-2 rounded-full bg-red-500" />
         <span className="text-xs font-semibold text-gray-500 mr-2">사용중 {stats.inUse}</span>
         <span className="w-2 h-2 rounded-full bg-orange-500" />
-        <span className="text-xs font-semibold text-gray-500">고장 {stats.broken}</span>
+        <span className="text-xs font-semibold text-gray-500 mr-2">고장 {stats.broken}</span>
+        <span className="w-2 h-2 rounded-full bg-gray-400" />
+        <span className="text-xs font-semibold text-gray-500">비활성 {stats.disabled}</span>
       </div>
     </div>
   );
