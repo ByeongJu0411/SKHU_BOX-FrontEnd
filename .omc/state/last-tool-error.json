@@ -1,0 +1,7 @@
+{
+  "tool_name": "Bash",
+  "tool_input_preview": "{\"command\":\"git checkout develop && git merge --ff-only origin/main && git push origin develop\",\"description\":\"Fast-forward local develop to match origin/main and push\"}",
+  "error": "Exit code 1\nM\t.omc/state/agent-replay-dbba1d8d-3a56-4fa5-b359-f686b2a42237.jsonl\nM\t.omc/state/hud-stdin-cache.json\nM\t.omc/state/idle-notif-cooldown.json\nM\t.omc/state/subagent-tracking.json\nYour branch is up to date with 'origin/develop'.\nAlready on 'develop'\nerror: Your local changes to the following files would be overwritten by merge:\n\t.omc/state/agent-replay-dbba1d8d-3a56-4fa5-b359-f686b2a42237.jsonl\n\t.omc/state/hud-stdin-cache.json\n\t.omc/state/idle-notif-cooldown.json\n\t.omc/state/subagent-tr...",
+  "timestamp": "2026-06-16T05:36:53.481Z",
+  "retry_count": 1
+}
