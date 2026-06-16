@@ -5,6 +5,8 @@
  * 각 사물함의 실제 상태(사용중/고장 등)는 백엔드 API에서 가져와.
  *
  * 중요: 구역의 name 값이 백엔드 API의 locationDetail과 정확히 일치해야 해.
+ * 관리자 사물함 관리(사물함 추가/필터) 페이지도 이 buildings 배열을 그대로 가져다 써서
+ * 건물·층·구역 선택지를 만들기 때문에, 여기 값을 바꾸면 관리자 페이지에도 즉시 반영돼.
  */
 
 export interface ZoneConfig {
@@ -32,7 +34,7 @@ export interface LockerApiItem {
   floor: number;
   locationDetail: string;
   lockerNumber: string;
-  status: "NORMAL" | "BROKEN" | "ACTIVE" | "IN_USE" | "RESERVED";
+  status: "NORMAL" | "BROKEN" | "DISABLED" | "ACTIVE" | "IN_USE" | "RESERVED";
 }
 
 // ===== 건물 설정 =====
@@ -82,27 +84,3 @@ export const buildings: BuildingConfig[] = [
     ],
   },
 ];
-
-/*
- * ✅ 백엔드 연동 가이드
- *
- * 백엔드에서 사물함 등록 시 아래 값들을 일치시켜야 함:
- *
- * 정보과학관:
- *   building: "정보과학관"
- *   floor: 1, locationDetail: "로비"              (15개)
- *   floor: 2, locationDetail: "강의실 복도"        (24개)
- *   floor: 2, locationDetail: "휴게실 옆"          (8개)
- *   floor: 3, locationDetail: "실습실 앞"          (24개)
- *
- * 새천년관:
- *   building: "새천년관"
- *   floor: 1, locationDetail: "자판기맞은편"       (15개, 1~15)
- *   floor: 1, locationDetail: "언론매체실 앞"      (45개, 16~60)
- *   floor: 1, locationDetail: "언론매체실 앞2"     (30개, 61~90)
- *
- * 사회융합학부:
- *   building: "사회융합학부"
- *   floor: 1, locationDetail: "사회복지처 방향"    (105개, 1~105)
- *   floor: 1, locationDetail: "학부방 방향"        (30개, 106~135)
- */
