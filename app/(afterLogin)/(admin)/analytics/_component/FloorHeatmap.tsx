@@ -1,8 +1,8 @@
-import { buildings } from "@/app/(afterLogin)/_component/config";
+import { buildings } from "@/app/(afterLogin)/(student)/apply/config";
+import type { LockerApiItem } from "../../lockers/_component/type";
 
-function getUsagePercent(buildingId: string, floorNum: number, zoneName: string): number {
-  const seed = buildingId.charCodeAt(0) * 100 + floorNum * 10 + zoneName.charCodeAt(0);
-  return 30 + (seed % 60);
+interface FloorHeatmapProps {
+  lockers: LockerApiItem[];
 }
 
 function getHeatStyle(percent: number): string {
@@ -12,7 +12,7 @@ function getHeatStyle(percent: number): string {
   return "bg-[#e8ebed]/50 text-[#4e5968] border-[#e8ebed]";
 }
 
-export default function FloorHeatmap() {
+export default function FloorHeatmap({ lockers }: FloorHeatmapProps) {
   return (
     <div className="bg-white rounded-2xl p-6 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
       <div className="flex items-center justify-between mb-5">
@@ -39,8 +39,15 @@ export default function FloorHeatmap() {
                   <span className="text-[13px] font-bold text-[#b0b8c1] w-7 text-right shrink-0">{floor.number}F</span>
                   <div className="flex gap-2 flex-wrap flex-1">
                     {floor.zones.map((zone) => {
-                      const percent = getUsagePercent(building.id, floor.number, zone.name);
+                      const zoneLockers = lockers.filter(
+                        (l) =>
+                          l.building === building.name && l.floor === floor.number && l.locationDetail === zone.name
+                      );
+                      const occupied = zoneLockers.filter((l) => l.currentUser).length;
+                      const percent =
+                        zoneLockers.length > 0 ? Math.round((occupied / zoneLockers.length) * 100) : 0;
                       const style = getHeatStyle(percent);
+
                       return (
                         <div
                           key={zone.name}
@@ -50,7 +57,9 @@ export default function FloorHeatmap() {
                             ${style}
                           `}
                         >
-                          <span className="block text-[15px] font-black">{percent}%</span>
+                          <span className="block text-[15px] font-black">
+                            {zoneLockers.length > 0 ? `${percent}%` : "—"}
+                          </span>
                           <span className="block text-[11px] opacity-70 mt-0.5">{zone.name}</span>
                         </div>
                       );

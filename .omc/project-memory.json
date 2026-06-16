@@ -123,15 +123,15 @@
       "type": "file"
     },
     {
-      "path": "app\\(afterLogin)\\(admin)\\admins\\_component\\AdminTable.tsx",
-      "accessCount": 4,
-      "lastAccessed": 1781581874413,
+      "path": "app\\(afterLogin)\\(admin)\\complaints\\page.tsx",
+      "accessCount": 5,
+      "lastAccessed": 1781586020918,
       "type": "file"
     },
     {
-      "path": "app\\(afterLogin)\\(admin)\\complaints\\page.tsx",
+      "path": "app\\(afterLogin)\\(admin)\\admins\\_component\\AdminTable.tsx",
       "accessCount": 4,
-      "lastAccessed": 1781583818991,
+      "lastAccessed": 1781581874413,
       "type": "file"
     },
     {
@@ -195,6 +195,54 @@
       "type": "file"
     },
     {
+      "path": "app\\(afterLogin)\\(admin)\\analytics\\_component\\KpiCards.tsx",
+      "accessCount": 2,
+      "lastAccessed": 1781586198501,
+      "type": "file"
+    },
+    {
+      "path": "app\\(afterLogin)\\(admin)\\analytics\\_component\\BuildingComparison.tsx",
+      "accessCount": 2,
+      "lastAccessed": 1781586216523,
+      "type": "file"
+    },
+    {
+      "path": "app\\(afterLogin)\\(admin)\\analytics\\_component\\FloorHeatmap.tsx",
+      "accessCount": 2,
+      "lastAccessed": 1781586234955,
+      "type": "file"
+    },
+    {
+      "path": "app\\(afterLogin)\\(admin)\\analytics\\_component\\ComplaintDistribution.tsx",
+      "accessCount": 2,
+      "lastAccessed": 1781586290289,
+      "type": "file"
+    },
+    {
+      "path": "app\\(afterLogin)\\(admin)\\analytics\\_component\\MonthlyTrend.tsx",
+      "accessCount": 2,
+      "lastAccessed": 1781586309679,
+      "type": "file"
+    },
+    {
+      "path": "app\\(afterLogin)\\(admin)\\analytics\\_component\\HourlyPattern.tsx",
+      "accessCount": 2,
+      "lastAccessed": 1781586327007,
+      "type": "file"
+    },
+    {
+      "path": "app\\(afterLogin)\\(admin)\\analytics\\page.tsx",
+      "accessCount": 2,
+      "lastAccessed": 1781586346205,
+      "type": "file"
+    },
+    {
+      "path": "app\\(afterLogin)\\(admin)\\settings\\page.tsx",
+      "accessCount": 2,
+      "lastAccessed": 1781586649042,
+      "type": "file"
+    },
+    {
       "path": "app\\(afterLogin)\\(admin)\\admins\\_component\\AdminRegisterModal.tsx",
       "accessCount": 1,
       "lastAccessed": 1781580089577,
@@ -228,6 +276,42 @@
       "path": "tsconfig.json",
       "accessCount": 1,
       "lastAccessed": 1781584203135,
+      "type": "file"
+    },
+    {
+      "path": "app\\(afterLogin)\\(admin)\\admindashboard\\_component\\BuildingUsage\\BuildingUsage.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1781585885601,
+      "type": "file"
+    },
+    {
+      "path": "app\\(afterLogin)\\(admin)\\admindashboard\\_component\\OperationSummary\\OperationSummary.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1781585885826,
+      "type": "file"
+    },
+    {
+      "path": "app\\(afterLogin)\\(admin)\\admindashboard\\page.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1781585886068,
+      "type": "file"
+    },
+    {
+      "path": "app\\(afterLogin)\\_component\\config.ts",
+      "accessCount": 1,
+      "lastAccessed": 1781585918058,
+      "type": "file"
+    },
+    {
+      "path": "app\\(afterLogin)\\(admin)\\complaints\\type.ts",
+      "accessCount": 1,
+      "lastAccessed": 1781586034405,
+      "type": "file"
+    },
+    {
+      "path": "app\\(afterLogin)\\(student)\\mypage\\page.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1781586504946,
       "type": "file"
     }
   ],
